@@ -45,6 +45,16 @@ export function UsersPage() {
     }
   };
 
+  const handleDelete = async (u: User) => {
+    if (!confirm(`${u.name} を削除しますか？`)) return;
+    try {
+      await api(`/users/${u.id}`, { method: "DELETE" });
+      loadUsers();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "削除に失敗しました");
+    }
+  };
+
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
@@ -94,6 +104,7 @@ export function UsersPage() {
               <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>メール</th>
               <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>ロール</th>
               <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>作成日</th>
+              <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -113,6 +124,14 @@ export function UsersPage() {
                   </select>
                 </td>
                 <td style={{ padding: 12, color: "#94a3b8", fontSize: 14 }}>{new Date(u.createdAt).toLocaleDateString("ja-JP")}</td>
+                <td style={{ padding: 12 }}>
+                  <button
+                    onClick={() => handleDelete(u)}
+                    style={{ padding: "4px 8px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}
+                  >
+                    削除
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

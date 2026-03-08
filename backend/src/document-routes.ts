@@ -41,6 +41,16 @@ docs.post("/folders", async (c) => {
   return c.json(folder, 201);
 });
 
+docs.put("/folders/:id", async (c) => {
+  const { id } = c.req.param();
+  const { name } = await c.req.json();
+  const db = getDb();
+  const folder = await db.select().from(schema.folders).where(eq(schema.folders.id, id)).then(r => r[0]);
+  if (!folder) return c.json({ error: "Not found" }, 404);
+  const [updated] = await db.update(schema.folders).set({ name }).where(eq(schema.folders.id, id)).returning();
+  return c.json({ data: updated });
+});
+
 docs.delete("/folders/:id", async (c) => {
   const db = getDb();
   const id = c.req.param("id");

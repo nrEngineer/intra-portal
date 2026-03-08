@@ -277,6 +277,18 @@ users.post("/", adminOnly, async (c) => {
   return c.json({ id: user.id, email: user.email, name: user.name, role: user.role }, 201);
 });
 
+// UC-7: Delete user (admin only)
+users.delete("/:id", adminOnly, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  if (id === user.id) return c.json({ error: "Cannot delete yourself" }, 400);
+  const db = getDb();
+  const target = await db.select().from(schema.users).where(eq(schema.users.id, id)).then(r => r[0]);
+  if (!target) return c.json({ error: "Not found" }, 404);
+  await db.delete(schema.users).where(eq(schema.users.id, id));
+  return c.body(null, 204);
+});
+
 // UC-7: Change user role (admin only)
 users.put("/:id/role", adminOnly, async (c) => {
   const db = getDb();

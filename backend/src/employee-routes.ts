@@ -85,4 +85,13 @@ employees.put("/:id", adminOnly, async (c) => {
   return c.json(emp);
 });
 
+employees.delete("/:id", adminOnly, async (c) => {
+  const { id } = c.req.param();
+  const db = getDb();
+  const emp = await db.select().from(schema.employees).where(eq(schema.employees.id, id)).then(r => r[0]);
+  if (!emp) return c.json({ error: "Not found" }, 404);
+  await db.delete(schema.employees).where(eq(schema.employees.id, id));
+  return c.body(null, 204);
+});
+
 export { employees };

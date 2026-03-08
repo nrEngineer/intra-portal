@@ -70,6 +70,29 @@ schedule.post("/teams", async (c) => {
   return c.json({ ...team, memberIds }, 201);
 });
 
+schedule.put("/teams/:id", async (c) => {
+  const user = c.get("user");
+  if (user.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+  const { id } = c.req.param();
+  const { name } = await c.req.json();
+  const db = getDb();
+  const team = await db.select().from(schema.teams).where(eq(schema.teams.id, id)).then(r => r[0]);
+  if (!team) return c.json({ error: "Not found" }, 404);
+  const [updated] = await db.update(schema.teams).set({ name }).where(eq(schema.teams.id, id)).returning();
+  return c.json({ data: updated });
+});
+
+schedule.delete("/teams/:id", async (c) => {
+  const user = c.get("user");
+  if (user.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+  const { id } = c.req.param();
+  const db = getDb();
+  const team = await db.select().from(schema.teams).where(eq(schema.teams.id, id)).then(r => r[0]);
+  if (!team) return c.json({ error: "Not found" }, 404);
+  await db.delete(schema.teams).where(eq(schema.teams.id, id));
+  return c.body(null, 204);
+});
+
 // Events
 schedule.get("/events", async (c) => {
   const db = getDb();
