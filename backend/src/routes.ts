@@ -204,8 +204,16 @@ api.put("/:id", adminOnly, async (c) => {
     return c.json({ error: "Not found" }, 404);
   }
 
-  const updates: Record<string, unknown> = { ...body, updatedAt: new Date().toISOString() };
-  if (body.status === "published" && existing.status === "draft") {
+  const { title, body: annBody, category, status, pinned } = body;
+  const updates: Record<string, unknown> = {
+    ...(title !== undefined && { title }),
+    ...(annBody !== undefined && { body: annBody }),
+    ...(category !== undefined && { category }),
+    ...(status !== undefined && { status }),
+    ...(pinned !== undefined && { pinned }),
+    updatedAt: new Date().toISOString(),
+  };
+  if (status === "published" && existing.status === "draft") {
     updates.publishedAt = new Date().toISOString();
   }
 

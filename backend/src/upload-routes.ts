@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { authMiddleware } from "./middleware.js";
+import { authMiddleware, adminOnly } from "./middleware.js";
 import { storage } from "./lib/storage.js";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -50,7 +50,7 @@ uploads.post("/", async (c) => {
   });
 });
 
-uploads.delete("/:key{.+}", async (c) => {
+uploads.delete("/:key{.+}", adminOnly, async (c) => {
   const key = c.req.param("key");
   await storage.delete(key);
   return c.json({ success: true });

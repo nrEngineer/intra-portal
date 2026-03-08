@@ -21,7 +21,8 @@ interface Document {
 }
 
 export function DocumentsPage() {
-  const { isAdmin } = useAuth();
+  const { user } = useAuth();
+  const canEdit = user?.role === "admin" || user?.role === "editor";
   const [folders, setFolders] = useState<Folder[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
@@ -162,9 +163,6 @@ export function DocumentsPage() {
     setDocForm({ title: "", fileUrl: "", fileName: "", fileSize: 0 });
   };
 
-  // isAdmin is available for future use
-  void isAdmin;
-
   return (
     <div>
       <div className="page-header">
@@ -182,25 +180,29 @@ export function DocumentsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setShowFolderInput((v) => !v);
-            setNewFolderName("");
-          }}
-        >
-          新規フォルダ
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setShowDocForm((v) => !v);
-            setEditingDocId(null);
-            setDocForm({ title: "", fileUrl: "", fileName: "", fileSize: 0 });
-          }}
-        >
-          新規ドキュメント
-        </button>
+        {canEdit && (
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setShowFolderInput((v) => !v);
+              setNewFolderName("");
+            }}
+          >
+            新規フォルダ
+          </button>
+        )}
+        {canEdit && (
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setShowDocForm((v) => !v);
+              setEditingDocId(null);
+              setDocForm({ title: "", fileUrl: "", fileName: "", fileSize: 0 });
+            }}
+          >
+            新規ドキュメント
+          </button>
+        )}
       </div>
 
       {showFolderInput && (
@@ -225,8 +227,9 @@ export function DocumentsPage() {
           <h3>{editingDocId ? "ドキュメント編集" : "新規ドキュメント"}</h3>
           <div className="form-grid" style={{ gridTemplateColumns: "1fr" }}>
             <div>
-              <label className="label">タイトル</label>
+              <label className="label" htmlFor="doc-title">タイトル</label>
               <input
+                id="doc-title"
                 className="input"
                 type="text"
                 placeholder="タイトル"
@@ -235,8 +238,9 @@ export function DocumentsPage() {
               />
             </div>
             <div>
-              <label className="label">ファイルURL</label>
+              <label className="label" htmlFor="doc-file-url">ファイルURL</label>
               <input
+                id="doc-file-url"
                 className="input"
                 type="text"
                 placeholder="ファイルURL（例: https://storage.example.com/file.pdf）"
@@ -245,8 +249,9 @@ export function DocumentsPage() {
               />
             </div>
             <div>
-              <label className="label">ファイル名</label>
+              <label className="label" htmlFor="doc-file-name">ファイル名</label>
               <input
+                id="doc-file-name"
                 className="input"
                 type="text"
                 placeholder="ファイル名（例: document.pdf）"
@@ -255,8 +260,9 @@ export function DocumentsPage() {
               />
             </div>
             <div>
-              <label className="label">ファイルサイズ（バイト）</label>
+              <label className="label" htmlFor="doc-file-size">ファイルサイズ（バイト）</label>
               <input
+                id="doc-file-size"
                 className="input"
                 type="number"
                 placeholder="ファイルサイズ（バイト）"
@@ -309,10 +315,12 @@ export function DocumentsPage() {
             >
               {f.name}
             </span>
-            <div className="flex gap-2">
-              <button className="btn btn-sm btn-warn" onClick={() => handleRenameFolder(f)}>名前変更</button>
-              <button className="btn btn-sm btn-danger" onClick={() => handleDeleteFolder(f)}>削除</button>
-            </div>
+            {canEdit && (
+              <div className="flex gap-2">
+                <button className="btn btn-sm btn-warn" onClick={() => handleRenameFolder(f)}>名前変更</button>
+                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteFolder(f)}>削除</button>
+              </div>
+            )}
           </div>
         ))}
 
@@ -334,8 +342,12 @@ export function DocumentsPage() {
               >
                 ダウンロード
               </a>
-              <button className="btn btn-sm btn-warn" onClick={() => startEditDoc(doc)}>編集</button>
-              <button className="btn btn-sm btn-danger" onClick={() => handleDeleteDoc(doc)}>削除</button>
+              {canEdit && (
+                <>
+                  <button className="btn btn-sm btn-warn" onClick={() => startEditDoc(doc)}>編集</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDeleteDoc(doc)}>削除</button>
+                </>
+              )}
             </div>
           </div>
         ))}

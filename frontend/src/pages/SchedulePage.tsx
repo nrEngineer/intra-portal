@@ -212,8 +212,9 @@ export function SchedulePage() {
           <h3>{editingEventId ? "イベント編集" : "新規イベント作成"}</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
             <div>
-              <label className="label">タイトル *</label>
+              <label className="label" htmlFor="event-form-title">タイトル *</label>
               <input
+                id="event-form-title"
                 className="input"
                 value={eventForm.title}
                 onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))}
@@ -221,8 +222,9 @@ export function SchedulePage() {
               />
             </div>
             <div>
-              <label className="label">説明</label>
+              <label className="label" htmlFor="event-form-description">説明</label>
               <textarea
+                id="event-form-description"
                 className="input"
                 value={eventForm.description}
                 onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))}
@@ -231,8 +233,9 @@ export function SchedulePage() {
             </div>
             <div className="form-grid">
               <div>
-                <label className="label">開始日時 *</label>
+                <label className="label" htmlFor="event-form-start">開始日時 *</label>
                 <input
+                  id="event-form-start"
                   className="input"
                   type="datetime-local"
                   value={eventForm.startAt}
@@ -240,8 +243,9 @@ export function SchedulePage() {
                 />
               </div>
               <div>
-                <label className="label">終了日時 *</label>
+                <label className="label" htmlFor="event-form-end">終了日時 *</label>
                 <input
+                  id="event-form-end"
                   className="input"
                   type="datetime-local"
                   value={eventForm.endAt}
@@ -250,8 +254,9 @@ export function SchedulePage() {
               </div>
             </div>
             <div>
-              <label className="label">チーム</label>
+              <label className="label" htmlFor="event-form-team">チーム</label>
               <select
+                id="event-form-team"
                 className="select"
                 value={eventForm.teamId}
                 onChange={(e) => setEventForm((f) => ({ ...f, teamId: e.target.value }))}
@@ -307,6 +312,14 @@ export function SchedulePage() {
                   key={e.id}
                   className="calendar-event"
                   onClick={() => setSelectedEvent(e)}
+                  onKeyDown={(ev) => {
+                    if (ev.key === "Enter" || ev.key === " ") {
+                      ev.preventDefault();
+                      setSelectedEvent(e);
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
                   title={e.title}
                 >
                   {e.title}
@@ -327,12 +340,16 @@ export function SchedulePage() {
         <div
           className="overlay"
           onClick={() => setSelectedEvent(null)}
+          onKeyDown={(e) => { if (e.key === "Escape") setSelectedEvent(null); }}
         >
           <div
             className="modal animate-in"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="event-detail-title"
           >
-            <h3 style={{ margin: "0 0 var(--sp-2)", fontSize: "var(--fs-lg)" }}>{selectedEvent.title}</h3>
+            <h3 id="event-detail-title" style={{ margin: "0 0 var(--sp-2)", fontSize: "var(--fs-lg)" }}>{selectedEvent.title}</h3>
             {selectedEvent.description && (
               <p className="text-sm text-muted" style={{ marginBottom: "var(--sp-3)" }}>{selectedEvent.description}</p>
             )}

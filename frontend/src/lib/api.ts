@@ -7,16 +7,12 @@ interface ApiOptions {
 
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const token = localStorage.getItem("accessToken");
-  const userId = localStorage.getItem("userId");
-  const userRole = localStorage.getItem("userRole");
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  if (userId) headers["x-user-id"] = userId;
-  if (userRole) headers["x-user-role"] = userRole;
 
   const res = await fetch(`${API_BASE}${path}`, {
     method: options.method || "GET",

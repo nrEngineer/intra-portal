@@ -52,20 +52,29 @@ employees.get("/:id", async (c) => {
 
 employees.post("/", adminOnly, async (c) => {
   const db = getDb();
-  const body = await c.req.json();
+  const { userId, name, email, department, position, photoUrl, phone, joinedAt } = await c.req.json<{
+    userId: string;
+    name: string;
+    email: string;
+    department: string;
+    position: string;
+    photoUrl?: string;
+    phone?: string;
+    joinedAt: string;
+  }>();
   const now = new Date().toISOString();
   const [emp] = await db
     .insert(schema.employees)
     .values({
       id: randomUUID(),
-      userId: body.userId,
-      name: body.name,
-      email: body.email,
-      department: body.department,
-      position: body.position,
-      photoUrl: body.photoUrl || null,
-      phone: body.phone || "",
-      joinedAt: body.joinedAt,
+      userId,
+      name,
+      email,
+      department,
+      position,
+      photoUrl: photoUrl || null,
+      phone: phone || "",
+      joinedAt,
       createdAt: now,
       updatedAt: now,
     })
@@ -75,10 +84,18 @@ employees.post("/", adminOnly, async (c) => {
 
 employees.put("/:id", adminOnly, async (c) => {
   const db = getDb();
-  const body = await c.req.json();
+  const { name, email, department, position, phone, photoUrl, joinedAt } = await c.req.json<{
+    name: string;
+    email: string;
+    department: string;
+    position: string;
+    phone?: string;
+    photoUrl?: string;
+    joinedAt: string;
+  }>();
   const [emp] = await db
     .update(schema.employees)
-    .set({ ...body, updatedAt: new Date().toISOString() })
+    .set({ name, email, department, position, phone, photoUrl, joinedAt, updatedAt: new Date().toISOString() })
     .where(eq(schema.employees.id, c.req.param("id")))
     .returning();
   if (!emp) return c.json({ error: "Not found" }, 404);

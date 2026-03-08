@@ -20,12 +20,18 @@ export const authMiddleware = createMiddleware<Env>(async (c, next) => {
     }
   }
 
-  // Fall back to header-based auth (dev/test)
-  const userId = c.req.header("x-user-id");
-  const userRole = c.req.header("x-user-role");
-  if (userId && userRole) {
-    c.set("user", { id: userId, name: userId, role: userRole as UserRole });
-    return next();
+  // Fall back to header-based auth (dev/test only)
+  if (process.env.NODE_ENV !== "production") {
+    const userId = c.req.header("x-user-id");
+    const userRole = c.req.header("x-user-role");
+    if (userId && userRole) {
+      const validRoles: UserRole[] = ["admin", "editor", "member"];
+      if (!validRoles.includes(userRole as UserRole)) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+      c.set("user", { id: userId, name: userId, role: userRole as UserRole });
+      return next();
+    }
   }
 
   return c.json({ error: "Unauthorized" }, 401);

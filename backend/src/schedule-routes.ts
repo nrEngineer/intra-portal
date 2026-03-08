@@ -50,7 +50,7 @@ schedule.post("/teams", async (c) => {
   const user = c.get("user");
   if (user.role !== "admin") return c.json({ error: "Forbidden" }, 403);
 
-  const { name, memberIds } = await c.req.json();
+  const { name, memberIds } = await c.req.json<{ name: string; memberIds: string[] }>();
   const now = new Date().toISOString();
   const teamId = randomUUID();
 
@@ -74,7 +74,7 @@ schedule.put("/teams/:id", async (c) => {
   const user = c.get("user");
   if (user.role !== "admin") return c.json({ error: "Forbidden" }, 403);
   const { id } = c.req.param();
-  const { name } = await c.req.json();
+  const { name } = await c.req.json<{ name: string }>();
   const db = getDb();
   const team = await db.select().from(schema.teams).where(eq(schema.teams.id, id)).then(r => r[0]);
   if (!team) return c.json({ error: "Not found" }, 404);
@@ -96,11 +96,28 @@ schedule.delete("/teams/:id", async (c) => {
 // Events
 schedule.get("/events", async (c) => {
   const db = getDb();
+  const user = c.get("user");
   const teamId = c.req.query("teamId");
   const start = c.req.query("start");
   const end = c.req.query("end");
 
   if (!teamId) return c.json({ error: "teamId is required" }, 400);
+
+  // M-4: Verify the requesting user is a member of the team (admins bypass)
+  if (user.role !== "admin") {
+    const membership = await db
+      .select()
+      .from(schema.teamMembers)
+      .where(
+        and(
+          eq(schema.teamMembers.teamId, teamId),
+          eq(schema.teamMembers.userId, user.id),
+        ),
+      )
+      .then((r) => r[0]);
+
+    if (!membership) return c.json({ error: "Forbidden" }, 403);
+  }
 
   const conditions = [eq(schema.scheduleEvents.teamId, teamId)];
   if (start && end) {
@@ -120,20 +137,27 @@ schedule.get("/events", async (c) => {
 schedule.post("/events", async (c) => {
   const db = getDb();
   const user = c.get("user");
-  const body = await c.req.json();
+  const { title, description, startAt, endAt, teamId, allDay } = await c.req.json<{
+    title: string;
+    description?: string;
+    startAt: string;
+    endAt: string;
+    teamId: string;
+    allDay?: boolean;
+  }>();
   const now = new Date().toISOString();
 
   const [event] = await db
     .insert(schema.scheduleEvents)
     .values({
       id: randomUUID(),
-      title: body.title,
-      description: body.description || "",
-      startAt: body.startAt,
-      endAt: body.endAt,
-      teamId: body.teamId,
+      title,
+      description: description || "",
+      startAt,
+      endAt,
+      teamId,
       createdBy: user.id,
-      allDay: body.allDay || false,
+      allDay: allDay || false,
       createdAt: now,
       updatedAt: now,
     })
@@ -144,25 +168,53 @@ schedule.post("/events", async (c) => {
 
 schedule.put("/events/:id", async (c) => {
   const db = getDb();
-  const body = await c.req.json();
+  const user = c.get("user");
+  const eventId = c.req.param("id");
+
+  // M-2: Fetch event and check ownership
+  const existing = await db
+    .select()
+    .from(schema.scheduleEvents)
+    .where(eq(schema.scheduleEvents.id, eventId))
+    .then((r) => r[0]);
+  if (!existing) return c.json({ error: "Not found" }, 404);
+  if (existing.createdBy !== user.id && user.role !== "admin") {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  const { title, description, startAt, endAt, allDay } = await c.req.json<{
+    title: string;
+    description?: string;
+    startAt: string;
+    endAt: string;
+    allDay?: boolean;
+  }>();
+
   const [event] = await db
     .update(schema.scheduleEvents)
-    .set({ ...body, updatedAt: new Date().toISOString() })
-    .where(eq(schema.scheduleEvents.id, c.req.param("id")))
+    .set({ title, description, startAt, endAt, allDay, updatedAt: new Date().toISOString() })
+    .where(eq(schema.scheduleEvents.id, eventId))
     .returning();
-  if (!event) return c.json({ error: "Not found" }, 404);
   return c.json(event);
 });
 
 schedule.delete("/events/:id", async (c) => {
   const db = getDb();
+  const user = c.get("user");
+  const eventId = c.req.param("id");
+
+  // M-2: Fetch event and check ownership
   const existing = await db
     .select()
     .from(schema.scheduleEvents)
-    .where(eq(schema.scheduleEvents.id, c.req.param("id")))
+    .where(eq(schema.scheduleEvents.id, eventId))
     .then((r) => r[0]);
   if (!existing) return c.json({ error: "Not found" }, 404);
-  await db.delete(schema.scheduleEvents).where(eq(schema.scheduleEvents.id, c.req.param("id")));
+  if (existing.createdBy !== user.id && user.role !== "admin") {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  await db.delete(schema.scheduleEvents).where(eq(schema.scheduleEvents.id, eventId));
   return c.json({ success: true });
 });
 

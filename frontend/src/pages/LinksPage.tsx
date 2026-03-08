@@ -73,9 +73,9 @@ export function LinksPage() {
     setError("");
     try {
       if (editingId) {
-        await api(`/links/${editingId}`, { method: "PUT", body: JSON.stringify(form) });
+        await api(`/links/${editingId}`, { method: "PUT", body: form });
       } else {
-        await api("/links", { method: "POST", body: JSON.stringify(form) });
+        await api("/links", { method: "POST", body: form });
       }
       resetForm();
       loadLinks();
@@ -119,8 +119,9 @@ export function LinksPage() {
           {error && <div className="alert alert-error">{error}</div>}
           <div className="form-grid">
             <div>
-              <label className="label">タイトル *</label>
+              <label className="label" htmlFor="link-title">タイトル *</label>
               <input
+                id="link-title"
                 className="input"
                 type="text"
                 required
@@ -129,8 +130,9 @@ export function LinksPage() {
               />
             </div>
             <div>
-              <label className="label">URL *</label>
+              <label className="label" htmlFor="link-url">URL *</label>
               <input
+                id="link-url"
                 className="input"
                 type="text"
                 required
@@ -139,8 +141,9 @@ export function LinksPage() {
               />
             </div>
             <div>
-              <label className="label">カテゴリ *</label>
+              <label className="label" htmlFor="link-category">カテゴリ *</label>
               <input
+                id="link-category"
                 className="input"
                 type="text"
                 required
@@ -155,8 +158,9 @@ export function LinksPage() {
               </datalist>
             </div>
             <div>
-              <label className="label">表示順</label>
+              <label className="label" htmlFor="link-sort-order">表示順</label>
               <input
+                id="link-sort-order"
                 className="input"
                 type="number"
                 value={form.sortOrder}
@@ -164,8 +168,9 @@ export function LinksPage() {
               />
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
-              <label className="label">説明</label>
+              <label className="label" htmlFor="link-description">説明</label>
               <input
+                id="link-description"
                 className="input"
                 type="text"
                 value={form.description}

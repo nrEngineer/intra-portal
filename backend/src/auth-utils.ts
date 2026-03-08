@@ -2,7 +2,13 @@ import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
 import type { UserRole } from "./types.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-key-change-in-production";
+let _jwtSecret: string | undefined;
+export function setJwtSecret(secret: string) { _jwtSecret = secret; }
+function getJwtSecret(): string {
+  const secret = _jwtSecret || process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is not configured");
+  return secret;
+}
 const ACCESS_TOKEN_EXPIRY = "15m";
 
 export const PASSWORD_REGEX = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
@@ -14,12 +20,12 @@ export function validatePassword(password: string): string | null {
 }
 
 export function generateAccessToken(userId: string, role: UserRole): string {
-  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
+  return jwt.sign({ userId, role }, getJwtSecret(), { expiresIn: ACCESS_TOKEN_EXPIRY });
 }
 
 export function verifyAccessToken(token: string): { userId: string; role: UserRole } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: string; role: UserRole };
+    return jwt.verify(token, getJwtSecret()) as { userId: string; role: UserRole };
   } catch {
     return null;
   }

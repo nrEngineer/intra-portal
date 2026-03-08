@@ -5,8 +5,7 @@ import * as schema from "./schema.js";
 export type AppDatabase = LibSQLDatabase<typeof schema>;
 
 let client: Client | null = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _db: any = null;
+let _db: AppDatabase | null = null;
 
 /** Get the current database instance */
 export function getDb(): AppDatabase {
@@ -20,7 +19,7 @@ export function getDb(): AppDatabase {
 }
 
 /** Set the database instance (used by Workers for D1 injection) */
-export function setDb(db: unknown): void {
+export function setDb(db: AppDatabase): void {
   _db = db;
 }
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { api } from "../lib/api";
 
 interface User {
@@ -8,11 +8,23 @@ interface User {
   role: string;
 }
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  });
+interface AuthContextValue {
+  user: User | null;
+  isAdmin: boolean;
+  login: (email: string, password: string) => Promise<User>;
+  logout: () => Promise<void>;
+  isLoggedIn: boolean;
+}
+
+function loadUserFromStorage(): User | null {
+  const stored = localStorage.getItem("user");
+  return stored ? JSON.parse(stored) : null;
+}
+
+export const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function useAuthState(): AuthContextValue {
+  const [user, setUser] = useState<User | null>(loadUserFromStorage);
 
   const login = useCallback(async (email: string, password: string) => {
     const data = await api<{ accessToken: string; refreshToken: string; user: User }>("/auth/login", {
@@ -33,9 +45,24 @@ export function useAuth() {
     if (refreshToken) {
       await api("/auth/logout", { method: "POST", body: { refreshToken } }).catch(() => {});
     }
-    localStorage.clear();
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
     setUser(null);
   }, []);
 
-  return { user, login, logout, isLoggedIn: !!user, isAdmin: user?.role === "admin" };
+  return useMemo(
+    () => ({ user, isAdmin: user?.role === "admin", login, logout, isLoggedIn: !!user }),
+    [user, login, logout]
+  );
+}
+
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  // When used outside AuthProvider (e.g. in isolated component tests),
+  // fall back to a standalone instance that reads/writes localStorage directly.
+  const standalone = useAuthState();
+  return ctx ?? standalone;
 }

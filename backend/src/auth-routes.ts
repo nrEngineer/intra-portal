@@ -57,6 +57,7 @@ auth.post("/login", async (c) => {
   }
 
   if (!user) {
+    await comparePassword(password, "$2b$10$dummy.hash.for.timing.attack.mitigation");
     return c.json({ error: "メールアドレスまたはパスワードが正しくありません" }, 401);
   }
 
@@ -186,10 +187,7 @@ auth.post("/password-reset/execute", async (c) => {
     .set({ passwordHash, updatedAt: new Date().toISOString() })
     .where(eq(schema.users.id, entry.userId));
 
-  await db
-    .update(schema.passwordResetTokens)
-    .set({ usedAt: new Date().toISOString() })
-    .where(eq(schema.passwordResetTokens.id, entry.id));
+  await db.delete(schema.passwordResetTokens).where(eq(schema.passwordResetTokens.id, entry.id));
 
   return c.json({ success: true });
 });
@@ -244,6 +242,11 @@ users.post("/", adminOnly, async (c) => {
     role: "admin" | "member";
   }>();
 
+  const VALID_ROLES = ["admin", "editor", "member"];
+  if (!VALID_ROLES.includes(role)) {
+    return c.json({ error: "無効なロールです" }, 400);
+  }
+
   const validationError = validatePassword(password);
   if (validationError) {
     return c.json({ error: validationError }, 400);
@@ -294,6 +297,12 @@ users.put("/:id/role", adminOnly, async (c) => {
   const db = getDb();
   const id = c.req.param("id");
   const { role } = await c.req.json<{ role: "admin" | "member" }>();
+
+  const VALID_ROLES = ["admin", "editor", "member"];
+  if (!VALID_ROLES.includes(role)) {
+    return c.json({ error: "無効なロールです" }, 400);
+  }
+
   const [updated] = await db
     .update(schema.users)
     .set({ role, updatedAt: new Date().toISOString() })

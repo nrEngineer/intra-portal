@@ -134,8 +134,9 @@ export function EmployeesPage() {
           <form onSubmit={editingId ? handleUpdate : handleCreate}>
             <div className="form-grid">
               <div>
-                <label className="label">名前</label>
+                <label className="label" htmlFor="emp-name">名前</label>
                 <input
+                  id="emp-name"
                   className="input"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -143,8 +144,9 @@ export function EmployeesPage() {
                 />
               </div>
               <div>
-                <label className="label">メール</label>
+                <label className="label" htmlFor="emp-email">メール</label>
                 <input
+                  id="emp-email"
                   className="input"
                   type="email"
                   value={form.email}
@@ -153,8 +155,9 @@ export function EmployeesPage() {
                 />
               </div>
               <div>
-                <label className="label">部署</label>
+                <label className="label" htmlFor="emp-department">部署</label>
                 <input
+                  id="emp-department"
                   className="input"
                   value={form.department}
                   onChange={(e) => setForm({ ...form, department: e.target.value })}
@@ -162,8 +165,9 @@ export function EmployeesPage() {
                 />
               </div>
               <div>
-                <label className="label">役職</label>
+                <label className="label" htmlFor="emp-position">役職</label>
                 <input
+                  id="emp-position"
                   className="input"
                   value={form.position}
                   onChange={(e) => setForm({ ...form, position: e.target.value })}
@@ -171,16 +175,18 @@ export function EmployeesPage() {
                 />
               </div>
               <div>
-                <label className="label">電話</label>
+                <label className="label" htmlFor="emp-phone">電話</label>
                 <input
+                  id="emp-phone"
                   className="input"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
               </div>
               <div>
-                <label className="label">入社日</label>
+                <label className="label" htmlFor="emp-joined-at">入社日</label>
                 <input
+                  id="emp-joined-at"
                   className="input"
                   type="date"
                   value={form.joinedAt}

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { eq, like, or, sql, desc, isNull } from "drizzle-orm";
 import { getDb } from "./db/connection.js";
 import * as schema from "./db/schema.js";
-import { authMiddleware } from "./middleware.js";
+import { authMiddleware, editorOrAdmin, adminOnly } from "./middleware.js";
 import type { User } from "./types.js";
 import { randomUUID } from "crypto";
 
@@ -22,10 +22,10 @@ docs.get("/folders", async (c) => {
   return c.json({ data });
 });
 
-docs.post("/folders", async (c) => {
+docs.post("/folders", editorOrAdmin, async (c) => {
   const db = getDb();
   const user = c.get("user");
-  const { name, parentId } = await c.req.json();
+  const { name, parentId } = await c.req.json<{ name: string; parentId?: string }>();
 
   const [folder] = await db
     .insert(schema.folders)
@@ -43,7 +43,7 @@ docs.post("/folders", async (c) => {
 
 docs.put("/folders/:id", async (c) => {
   const { id } = c.req.param();
-  const { name } = await c.req.json();
+  const { name } = await c.req.json<{ name: string }>();
   const db = getDb();
   const folder = await db.select().from(schema.folders).where(eq(schema.folders.id, id)).then(r => r[0]);
   if (!folder) return c.json({ error: "Not found" }, 404);
@@ -51,7 +51,7 @@ docs.put("/folders/:id", async (c) => {
   return c.json({ data: updated });
 });
 
-docs.delete("/folders/:id", async (c) => {
+docs.delete("/folders/:id", adminOnly, async (c) => {
   const db = getDb();
   const id = c.req.param("id");
 
@@ -131,10 +131,16 @@ docs.get("/:id/versions", async (c) => {
   return c.json({ data });
 });
 
-docs.post("/", async (c) => {
+docs.post("/", editorOrAdmin, async (c) => {
   const db = getDb();
   const user = c.get("user");
-  const body = await c.req.json();
+  const { title, folderId, fileUrl, fileName, fileSize } = await c.req.json<{
+    title: string;
+    folderId?: string;
+    fileUrl: string;
+    fileName: string;
+    fileSize: number;
+  }>();
   const now = new Date().toISOString();
   const docId = randomUUID();
 
@@ -142,11 +148,11 @@ docs.post("/", async (c) => {
     .insert(schema.documents)
     .values({
       id: docId,
-      title: body.title,
-      folderId: body.folderId || null,
-      fileUrl: body.fileUrl,
-      fileName: body.fileName,
-      fileSize: body.fileSize,
+      title,
+      folderId: folderId || null,
+      fileUrl,
+      fileName,
+      fileSize,
       version: 1,
       createdBy: user.id,
       createdAt: now,
@@ -158,9 +164,9 @@ docs.post("/", async (c) => {
     id: randomUUID(),
     documentId: docId,
     version: 1,
-    fileUrl: body.fileUrl,
-    fileName: body.fileName,
-    fileSize: body.fileSize,
+    fileUrl,
+    fileName,
+    fileSize,
     createdBy: user.id,
     createdAt: now,
   });
@@ -168,11 +174,17 @@ docs.post("/", async (c) => {
   return c.json(doc, 201);
 });
 
-docs.put("/:id", async (c) => {
+docs.put("/:id", editorOrAdmin, async (c) => {
   const db = getDb();
   const user = c.get("user");
   const id = c.req.param("id");
-  const body = await c.req.json();
+  const { title, body: docBody, fileUrl, fileName, fileSize } = await c.req.json<{
+    title: string;
+    body?: string;
+    fileUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+  }>();
   const now = new Date().toISOString();
 
   const existing = await db
@@ -183,7 +195,7 @@ docs.put("/:id", async (c) => {
 
   if (!existing) return c.json({ error: "Not found" }, 404);
 
-  const isNewFile = body.fileUrl && body.fileUrl !== existing.fileUrl;
+  const isNewFile = fileUrl && fileUrl !== existing.fileUrl;
   const newVersion = isNewFile ? existing.version + 1 : existing.version;
 
   if (isNewFile) {
@@ -191,9 +203,9 @@ docs.put("/:id", async (c) => {
       id: randomUUID(),
       documentId: id,
       version: newVersion,
-      fileUrl: body.fileUrl,
-      fileName: body.fileName || existing.fileName,
-      fileSize: body.fileSize || existing.fileSize,
+      fileUrl,
+      fileName: fileName || existing.fileName,
+      fileSize: fileSize || existing.fileSize,
       createdBy: user.id,
       createdAt: now,
     });
@@ -202,7 +214,9 @@ docs.put("/:id", async (c) => {
   const [doc] = await db
     .update(schema.documents)
     .set({
-      ...body,
+      title,
+      body: docBody,
+      fileUrl,
       version: newVersion,
       updatedAt: now,
     })
@@ -212,7 +226,7 @@ docs.put("/:id", async (c) => {
   return c.json(doc);
 });
 
-docs.delete("/:id", async (c) => {
+docs.delete("/:id", adminOnly, async (c) => {
   const db = getDb();
   const id = c.req.param("id");
 

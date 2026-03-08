@@ -43,18 +43,24 @@ links.get("/categories", async (c) => {
 links.post("/", editorOrAdmin, async (c) => {
   const db = getDb();
   const user = c.get("user");
-  const body = await c.req.json();
+  const { title, url, description, category, sortOrder } = await c.req.json<{
+    title: string;
+    url: string;
+    description?: string;
+    category: string;
+    sortOrder?: number;
+  }>();
   const now = new Date().toISOString();
 
   const [link] = await db
     .insert(schema.internalLinks)
     .values({
       id: randomUUID(),
-      title: body.title,
-      url: body.url,
-      description: body.description || "",
-      category: body.category,
-      sortOrder: body.sortOrder || 0,
+      title,
+      url,
+      description: description || "",
+      category,
+      sortOrder: sortOrder || 0,
       createdBy: user.id,
       createdAt: now,
       updatedAt: now,
@@ -66,10 +72,15 @@ links.post("/", editorOrAdmin, async (c) => {
 
 links.put("/:id", editorOrAdmin, async (c) => {
   const db = getDb();
-  const body = await c.req.json();
+  const { title, url, description, category } = await c.req.json<{
+    title: string;
+    url: string;
+    description?: string;
+    category: string;
+  }>();
   const [link] = await db
     .update(schema.internalLinks)
-    .set({ ...body, updatedAt: new Date().toISOString() })
+    .set({ title, url, description, category, updatedAt: new Date().toISOString() })
     .where(eq(schema.internalLinks.id, c.req.param("id")))
     .returning();
   if (!link) return c.json({ error: "Not found" }, 404);

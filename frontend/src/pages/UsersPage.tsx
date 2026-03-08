@@ -89,8 +89,9 @@ export function UsersPage() {
           <form onSubmit={handleCreate}>
             <div className="form-grid">
               <div>
-                <label className="label">名前</label>
+                <label className="label" htmlFor="user-name">名前</label>
                 <input
+                  id="user-name"
                   className="input"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -98,8 +99,9 @@ export function UsersPage() {
                 />
               </div>
               <div>
-                <label className="label">メール</label>
+                <label className="label" htmlFor="user-email">メール</label>
                 <input
+                  id="user-email"
                   className="input"
                   type="email"
                   value={form.email}
@@ -108,8 +110,9 @@ export function UsersPage() {
                 />
               </div>
               <div>
-                <label className="label">パスワード</label>
+                <label className="label" htmlFor="user-password">パスワード</label>
                 <input
+                  id="user-password"
                   className="input"
                   type="password"
                   value={form.password}
@@ -118,8 +121,9 @@ export function UsersPage() {
                 />
               </div>
               <div>
-                <label className="label">ロール</label>
+                <label className="label" htmlFor="user-role">ロール</label>
                 <select
+                  id="user-role"
                   className="select"
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}

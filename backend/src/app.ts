@@ -13,7 +13,7 @@ const app = new Hono();
 app.use(
   "/*",
   cors({
-    origin: (origin) => origin || "*",
+    origin: process.env.ALLOWED_ORIGINS?.split(",") ?? ["http://localhost:5173"],
     credentials: true,
   }),
 );

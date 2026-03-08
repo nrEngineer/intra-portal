@@ -35,7 +35,7 @@ export function Layout() {
 
   return (
     <div className="app-layout">
-      <nav className="sidebar">
+      <nav className="sidebar" aria-label="メインナビゲーション">
         <div className="sidebar-brand">
           <h1>社内ポータル</h1>
           <div className="brand-sub">Intra Portal</div>
@@ -47,6 +47,7 @@ export function Layout() {
               key={item.to}
               to={item.to}
               className={isActive(item.to) ? "active" : ""}
+              aria-current={isActive(item.to) ? "page" : undefined}
             >
               <span className="nav-icon">{item.icon}</span>
               {item.label}
@@ -56,6 +57,7 @@ export function Layout() {
             <Link
               to="/users"
               className={isActive("/users") ? "active" : ""}
+              aria-current={isActive("/users") ? "page" : undefined}
             >
               <span className="nav-icon">⚙</span>
               ユーザー管理

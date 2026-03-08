@@ -136,8 +136,9 @@ export function AnnouncementsPage() {
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
               <div style={{ gridColumn: "1 / -1" }}>
-                <label className="label">タイトル</label>
+                <label className="label" htmlFor="ann-title">タイトル</label>
                 <input
+                  id="ann-title"
                   type="text"
                   className="input"
                   value={form.title}
@@ -146,8 +147,9 @@ export function AnnouncementsPage() {
                 />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
-                <label className="label">本文</label>
+                <label className="label" htmlFor="ann-body">本文</label>
                 <textarea
+                  id="ann-body"
                   className="input"
                   value={form.body}
                   onChange={(e) => setForm({ ...form, body: e.target.value })}
@@ -156,8 +158,9 @@ export function AnnouncementsPage() {
                 />
               </div>
               <div>
-                <label className="label">カテゴリ</label>
+                <label className="label" htmlFor="ann-category">カテゴリ</label>
                 <select
+                  id="ann-category"
                   className="select"
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -168,8 +171,9 @@ export function AnnouncementsPage() {
                 </select>
               </div>
               <div>
-                <label className="label">ステータス</label>
+                <label className="label" htmlFor="ann-status">ステータス</label>
                 <select
+                  id="ann-status"
                   className="select"
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
