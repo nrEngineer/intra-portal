@@ -26,7 +26,7 @@ describe("App ルーティング", () => {
   it("ログイン済みではダッシュボードが表示される", () => {
     setupLocalStorage();
     render(<App />);
-    expect(screen.getByRole("heading", { name: "ダッシュボード" })).toBeInTheDocument();
+    expect(screen.getByText("管理者 さん")).toBeInTheDocument();
   });
 
   it("サイドバーにナビゲーションリンクが表示される", () => {
@@ -35,8 +35,8 @@ describe("App ルーティング", () => {
     const nav = screen.getByRole("navigation");
     expect(nav).toBeInTheDocument();
     expect(screen.getByText("社員名簿")).toBeInTheDocument();
-    expect(screen.getByText("リンク集")).toBeInTheDocument();
-    expect(screen.getByText("ドキュメント")).toBeInTheDocument();
+    expect(screen.getAllByText("リンク集").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("ドキュメント").length).toBeGreaterThanOrEqual(1);
   });
 
   it("管理者にはユーザー管理リンクが表示される", () => {

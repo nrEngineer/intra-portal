@@ -106,10 +106,11 @@ export function EmployeesPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24 }}>社員名簿</h1>
+      <div className="page-header flex items-center justify-between">
+        <h1 className="page-title">社員名簿</h1>
         {isAdmin && (
           <button
+            className="btn btn-primary"
             onClick={() => {
               if (isFormVisible) {
                 handleCancelForm();
@@ -120,7 +121,6 @@ export function EmployeesPage() {
                 setError("");
               }
             }}
-            style={{ padding: "8px 16px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
           >
             {isFormVisible ? "キャンセル" : "新規社員"}
           </button>
@@ -128,89 +128,91 @@ export function EmployeesPage() {
       </div>
 
       {isAdmin && isFormVisible && (
-        <form
-          onSubmit={editingId ? handleUpdate : handleCreate}
-          style={{ background: "#fff", padding: 20, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", marginBottom: 24 }}
-        >
-          <h2 style={{ fontSize: 16, marginBottom: 16, marginTop: 0 }}>{formTitle}</h2>
-          {error && <p style={{ color: "#ef4444", marginBottom: 12, fontSize: 14 }}>{error}</p>}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>名前</label>
-              <input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-                style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }}
-              />
+        <div className="form-panel animate-in">
+          <h3>{formTitle}</h3>
+          {error && <div className="alert alert-error">{error}</div>}
+          <form onSubmit={editingId ? handleUpdate : handleCreate}>
+            <div className="form-grid">
+              <div>
+                <label className="label">名前</label>
+                <input
+                  className="input"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">メール</label>
+                <input
+                  className="input"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">部署</label>
+                <input
+                  className="input"
+                  value={form.department}
+                  onChange={(e) => setForm({ ...form, department: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">役職</label>
+                <input
+                  className="input"
+                  value={form.position}
+                  onChange={(e) => setForm({ ...form, position: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">電話</label>
+                <input
+                  className="input"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="label">入社日</label>
+                <input
+                  className="input"
+                  type="date"
+                  value={form.joinedAt}
+                  onChange={(e) => setForm({ ...form, joinedAt: e.target.value })}
+                />
+              </div>
             </div>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>メール</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                required
-                style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }}
-              />
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary">
+                {editingId ? "更新" : "作成"}
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={handleCancelForm}>
+                キャンセル
+              </button>
             </div>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>部署</label>
-              <input
-                value={form.department}
-                onChange={(e) => setForm({ ...form, department: e.target.value })}
-                required
-                style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }}
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>役職</label>
-              <input
-                value={form.position}
-                onChange={(e) => setForm({ ...form, position: e.target.value })}
-                required
-                style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }}
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>電話</label>
-              <input
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }}
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>入社日</label>
-              <input
-                type="date"
-                value={form.joinedAt}
-                onChange={(e) => setForm({ ...form, joinedAt: e.target.value })}
-                style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }}
-              />
-            </div>
-          </div>
-          <button
-            type="submit"
-            style={{ marginTop: 12, padding: "8px 24px", background: "#10b981", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-          >
-            {editingId ? "更新" : "作成"}
-          </button>
-        </form>
+          </form>
+        </div>
       )}
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+      <div className="toolbar animate-in stagger-1">
         <input
+          className="input flex-1"
           type="text"
           placeholder="名前・部署・役職で検索..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4, flex: 1 }}
         />
         <select
+          className="select"
+          style={{ width: "auto" }}
           value={department}
           onChange={(e) => setDepartment(e.target.value)}
-          style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4 }}
         >
           <option value="">全部署</option>
           {departments.map((d) => (
@@ -220,44 +222,48 @@ export function EmployeesPage() {
       </div>
 
       {employees.length === 0 ? (
-        <p style={{ color: "#94a3b8" }}>社員が見つかりません</p>
+        <div className="empty-state animate-in stagger-2">社員が見つかりません</div>
       ) : (
-        <div style={{ background: "#fff", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="table-wrap animate-in stagger-2">
+          <table className="table">
             <thead>
-              <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-                <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>名前</th>
-                <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>部署</th>
-                <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>役職</th>
-                <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>メール</th>
-                <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>電話</th>
-                {isAdmin && <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>操作</th>}
+              <tr>
+                <th>名前</th>
+                <th>部署</th>
+                <th>役職</th>
+                <th>メール</th>
+                <th>電話</th>
+                {isAdmin && <th>操作</th>}
               </tr>
             </thead>
             <tbody>
               {employees.map((emp) => (
-                <tr key={emp.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                  <td style={{ padding: 12 }}>{emp.name}</td>
-                  <td style={{ padding: 12, color: "#64748b" }}>{emp.department}</td>
-                  <td style={{ padding: 12, color: "#64748b" }}>{emp.position}</td>
-                  <td style={{ padding: 12 }}>
-                    <a href={`mailto:${emp.email}`} style={{ color: "#3b82f6" }}>{emp.email}</a>
+                <tr key={emp.id}>
+                  <td>{emp.name}</td>
+                  <td>{emp.department}</td>
+                  <td>{emp.position}</td>
+                  <td>
+                    <a href={`mailto:${emp.email}`} style={{ color: "var(--c-info)" }}>
+                      {emp.email}
+                    </a>
                   </td>
-                  <td style={{ padding: 12, color: "#64748b" }}>{emp.phone || "-"}</td>
+                  <td>{emp.phone || "-"}</td>
                   {isAdmin && (
-                    <td style={{ padding: 12 }}>
-                      <button
-                        onClick={() => handleEdit(emp)}
-                        style={{ padding: "4px 8px", background: "#f59e0b", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, marginRight: 4 }}
-                      >
-                        編集
-                      </button>
-                      <button
-                        onClick={() => handleDelete(emp)}
-                        style={{ padding: "4px 8px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}
-                      >
-                        削除
-                      </button>
+                    <td>
+                      <div className="flex gap-2">
+                        <button
+                          className="btn btn-sm btn-warn"
+                          onClick={() => handleEdit(emp)}
+                        >
+                          編集
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleDelete(emp)}
+                        >
+                          削除
+                        </button>
+                      </div>
                     </td>
                   )}
                 </tr>

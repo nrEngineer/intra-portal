@@ -75,10 +75,10 @@ describe("DocumentsPage", () => {
     await user.click(screen.getByText("規程集"));
 
     await waitFor(() => {
-      // パンくずに「規程集」が追加される
-      const breadcrumbButtons = screen.getAllByRole("button");
-      const folderInBreadcrumb = breadcrumbButtons.find((b) => b.textContent === "規程集");
-      expect(folderInBreadcrumb).toBeInTheDocument();
+      // パンくずに「規程集」が追加される（現在のフォルダはspanで表示）
+      const breadcrumb = document.querySelector(".breadcrumb");
+      expect(breadcrumb).toBeTruthy();
+      expect(breadcrumb!.textContent).toContain("規程集");
     });
   });
 

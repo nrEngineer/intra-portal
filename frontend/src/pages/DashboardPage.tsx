@@ -20,42 +20,66 @@ export function DashboardPage() {
     api<{ count: number }>("/announcements/unread-count").then((res) => setUnreadCount(res.count));
   }, []);
 
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "おはようございます" : hour < 17 ? "お疲れ様です" : "お疲れ様でした";
+
   return (
     <div>
-      <h1 style={{ fontSize: 24, marginBottom: 24 }}>ダッシュボード</h1>
-      <p style={{ marginBottom: 24, color: "#64748b" }}>ようこそ、{user?.name} さん</p>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
-        <div style={{ background: "#fff", padding: 20, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <h3 style={{ fontSize: 14, color: "#64748b", marginBottom: 8 }}>未読お知らせ</h3>
-          <p style={{ fontSize: 32, fontWeight: "bold", color: unreadCount > 0 ? "#ef4444" : "#10b981" }}>{unreadCount}</p>
-        </div>
-        <div style={{ background: "#fff", padding: 20, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <h3 style={{ fontSize: 14, color: "#64748b", marginBottom: 8 }}>クイックリンク</h3>
-          <Link to="/announcements" style={{ color: "#3b82f6", fontSize: 14 }}>お知らせ一覧</Link>
-        </div>
-        <div style={{ background: "#fff", padding: 20, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <h3 style={{ fontSize: 14, color: "#64748b", marginBottom: 8 }}>クイックリンク</h3>
-          <Link to="/schedule" style={{ color: "#3b82f6", fontSize: 14 }}>スケジュール</Link>
-        </div>
+      <div className="page-header">
+        <p className="page-subtitle" style={{ marginBottom: 4 }}>{greeting}</p>
+        <h1 className="page-title">{user?.name} さん</h1>
       </div>
 
-      <div style={{ background: "#fff", padding: 20, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-        <h2 style={{ fontSize: 18, marginBottom: 16 }}>最新のお知らせ</h2>
+      <div className="grid-3 animate-in stagger-1" style={{ marginBottom: 32 }}>
+        <div className="card stat-card" style={{ color: unreadCount > 0 ? "var(--c-accent)" : "var(--c-success)" }}>
+          <div className="stat-label">未読お知らせ</div>
+          <div className="stat-value">{unreadCount}</div>
+          <Link to="/announcements" style={{ fontSize: "var(--fs-xs)", color: "var(--c-info)", marginTop: 8, display: "inline-block" }}>
+            一覧を見る →
+          </Link>
+        </div>
+
+        <Link to="/schedule" className="card stat-card" style={{ color: "var(--c-info)", textDecoration: "none" }}>
+          <div className="stat-label">スケジュール</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--fs-lg)", fontWeight: 700, marginTop: 8 }}>
+            {now.getMonth() + 1}月{now.getDate()}日
+          </div>
+          <div style={{ fontSize: "var(--fs-xs)", color: "var(--c-text-muted)", marginTop: 4 }}>
+            カレンダーを確認 →
+          </div>
+        </Link>
+
+        <Link to="/links" className="card stat-card" style={{ color: "var(--c-primary)", textDecoration: "none" }}>
+          <div className="stat-label">リンク集</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--fs-lg)", fontWeight: 700, marginTop: 8 }}>
+            Quick Access
+          </div>
+          <div style={{ fontSize: "var(--fs-xs)", color: "var(--c-text-muted)", marginTop: 4 }}>
+            業務ツールへ →
+          </div>
+        </Link>
+      </div>
+
+      <div className="card animate-in stagger-2">
+        <div style={{ padding: "var(--sp-5) var(--sp-6)", borderBottom: "1px solid var(--c-border-light)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "var(--fs-md)", fontWeight: 700 }}>最新のお知らせ</h2>
+          <Link to="/announcements" style={{ fontSize: "var(--fs-xs)", color: "var(--c-info)" }}>すべて見る →</Link>
+        </div>
         {announcements.length === 0 ? (
-          <p style={{ color: "#94a3b8" }}>お知らせはありません</p>
+          <div className="empty-state">お知らせはありません</div>
         ) : (
-          <ul style={{ listStyle: "none", padding: 0 }}>
+          <div>
             {announcements.map((a) => (
-              <li key={a.id} style={{ padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
-                <Link to={`/announcements/${a.id}`} style={{ color: "#1e293b", textDecoration: "none" }}>
-                  <span style={{ fontSize: 12, color: "#64748b", marginRight: 8 }}>[{a.category}]</span>
-                  {a.title}
-                </Link>
-                <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 8 }}>{new Date(a.createdAt).toLocaleDateString("ja-JP")}</span>
-              </li>
+              <Link key={a.id} to={`/announcements/${a.id}`} className="announcement-item">
+                <span className="badge badge-default" style={{ marginRight: 12 }}>{a.category}</span>
+                <span style={{ flex: 1 }}>{a.title}</span>
+                <span style={{ fontSize: "var(--fs-xs)", color: "var(--c-text-faint)", fontFamily: "var(--font-display)" }}>
+                  {new Date(a.createdAt).toLocaleDateString("ja-JP")}
+                </span>
+              </Link>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>

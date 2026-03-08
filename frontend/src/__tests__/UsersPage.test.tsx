@@ -61,8 +61,9 @@ describe("UsersPage", () => {
     const formsAfter = document.querySelectorAll("form");
     expect(formsAfter.length).toBe(1);
 
-    // キャンセルで非表示
-    await user.click(screen.getByRole("button", { name: "キャンセル" }));
+    // キャンセルで非表示（フォーム内のキャンセルボタンをクリック）
+    const cancelButtons = screen.getAllByRole("button", { name: "キャンセル" });
+    await user.click(cancelButtons[cancelButtons.length - 1]);
     await waitFor(() => {
       expect(document.querySelectorAll("form").length).toBe(0);
     });

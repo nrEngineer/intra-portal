@@ -120,90 +120,80 @@ export function AnnouncementsPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, margin: 0 }}>お知らせ</h1>
+      <div className="page-header flex items-center justify-between">
+        <h1 className="page-title">お知らせ</h1>
         {isAdmin && (
-          <button
-            onClick={openCreate}
-            style={{ padding: "8px 16px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-          >
+          <button className="btn btn-primary" onClick={openCreate}>
             新規お知らせ
           </button>
         )}
       </div>
 
       {isAdmin && showForm && (
-        <div style={{ background: "#fff", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", padding: 24, marginBottom: 24 }}>
-          <h2 style={{ fontSize: 18, marginTop: 0, marginBottom: 16 }}>{editingId ? "お知らせ編集" : "新規お知らせ"}</h2>
-          {error && <p style={{ color: "#ef4444", marginBottom: 12 }}>{error}</p>}
+        <div className="form-panel animate-in stagger-1">
+          <h3>{editingId ? "お知らせ編集" : "新規お知らせ"}</h3>
+          {error && <div className="alert alert-error">{error}</div>}
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: "block", marginBottom: 4, fontWeight: 600, fontSize: 14 }}>タイトル</label>
-              <input
-                type="text"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                required
-                style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }}
-              />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: "block", marginBottom: 4, fontWeight: 600, fontSize: 14 }}>本文</label>
-              <textarea
-                value={form.body}
-                onChange={(e) => setForm({ ...form, body: e.target.value })}
-                required
-                rows={6}
-                style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box", resize: "vertical" }}
-              />
-            </div>
-            <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: "block", marginBottom: 4, fontWeight: 600, fontSize: 14 }}>カテゴリ</label>
+            <div className="form-grid">
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label className="label">タイトル</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label className="label">本文</label>
+                <textarea
+                  className="input"
+                  value={form.body}
+                  onChange={(e) => setForm({ ...form, body: e.target.value })}
+                  required
+                  rows={6}
+                />
+              </div>
+              <div>
+                <label className="label">カテゴリ</label>
                 <select
+                  className="select"
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4 }}
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
               </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: "block", marginBottom: 4, fontWeight: 600, fontSize: 14 }}>ステータス</label>
+              <div>
+                <label className="label">ステータス</label>
                 <select
+                  className="select"
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4 }}
                 >
                   <option value="published">公開</option>
                   <option value="draft">下書き</option>
                 </select>
               </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={form.pinned}
+                    onChange={(e) => setForm({ ...form, pinned: e.target.checked })}
+                  />
+                  ピン留め
+                </label>
+              </div>
             </div>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14 }}>
-                <input
-                  type="checkbox"
-                  checked={form.pinned}
-                  onChange={(e) => setForm({ ...form, pinned: e.target.checked })}
-                />
-                ピン留め
-              </label>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                type="submit"
-                style={{ padding: "8px 24px", background: "#10b981", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-              >
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary">
                 {editingId ? "更新" : "作成"}
               </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                style={{ padding: "8px 16px", background: "#fff", color: "#64748b", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer" }}
-              >
+              <button type="button" className="btn btn-ghost" onClick={handleCancel}>
                 キャンセル
               </button>
             </div>
@@ -211,22 +201,23 @@ export function AnnouncementsPage() {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+      <div className="toolbar animate-in stagger-2">
         <input
           type="text"
+          className="input flex-1"
           placeholder="検索..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && updateParams({ search, page: "1" })}
-          style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4, flex: 1 }}
         />
         <select
+          className="select"
+          style={{ width: "auto" }}
           value={category}
           onChange={(e) => {
             setCategory(e.target.value);
             updateParams({ category: e.target.value, page: "1" });
           }}
-          style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4 }}
         >
           <option value="">全カテゴリ</option>
           <option value="general">一般</option>
@@ -234,65 +225,55 @@ export function AnnouncementsPage() {
           <option value="it">IT</option>
           <option value="event">イベント</option>
         </select>
-        <button
-          onClick={() => updateParams({ search, page: "1" })}
-          style={{ padding: "8px 16px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-        >
+        <button className="btn btn-primary" onClick={() => updateParams({ search, page: "1" })}>
           検索
         </button>
       </div>
 
       {announcements.length === 0 ? (
-        <p style={{ color: "#94a3b8" }}>お知らせはありません</p>
+        <div className="empty-state animate-in stagger-3">お知らせはありません</div>
       ) : (
-        <div style={{ background: "#fff", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+        <div className="card animate-in stagger-3">
           {announcements.map((a) => (
-            <Link
-              key={a.id}
-              to={`/announcements/${a.id}`}
-              style={{ display: "block", padding: 16, borderBottom: "1px solid #f1f5f9", textDecoration: "none", color: "#1e293b" }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {a.isPinned && <span style={{ color: "#f59e0b", fontSize: 12 }}>&#x1F4CC;</span>}
-                <span style={{ fontSize: 12, color: "#64748b", background: "#f1f5f9", padding: "2px 8px", borderRadius: 4 }}>{a.category}</span>
-                <span style={{ flex: 1 }}>{a.title}</span>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>{new Date(a.createdAt).toLocaleDateString("ja-JP")}</span>
-                {isAdmin && (
-                  <span style={{ display: "flex", gap: 4 }}>
-                    <button
-                      onClick={(e) => startEdit(a, e)}
-                      style={{ padding: "4px 8px", background: "#f59e0b", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12, marginRight: 4 }}
-                    >
-                      編集
-                    </button>
-                    <button
-                      onClick={(e) => handleDelete(a, e)}
-                      style={{ padding: "4px 8px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}
-                    >
-                      削除
-                    </button>
-                  </span>
-                )}
-              </div>
+            <Link key={a.id} to={`/announcements/${a.id}`} className="announcement-item">
+              {a.isPinned && (
+                <span style={{ marginRight: "var(--sp-2)", fontSize: "var(--fs-xs)" }}>📌</span>
+              )}
+              <span className="badge badge-default" style={{ marginRight: "var(--sp-3)" }}>
+                {a.category}
+              </span>
+              <span className="flex-1">{a.title}</span>
+              <span className="text-xs text-muted" style={{ marginRight: "var(--sp-3)" }}>
+                {new Date(a.createdAt).toLocaleDateString("ja-JP")}
+              </span>
+              {isAdmin && (
+                <span className="flex gap-2">
+                  <button
+                    className="btn btn-sm btn-warn"
+                    onClick={(e) => startEdit(a, e)}
+                  >
+                    編集
+                  </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={(e) => handleDelete(a, e)}
+                  >
+                    削除
+                  </button>
+                </span>
+              )}
             </Link>
           ))}
         </div>
       )}
 
       {totalPages > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 24 }}>
+        <div className="pagination animate-in stagger-4">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <button
               key={p}
+              className={`page-btn${p === page ? " active" : ""}`}
               onClick={() => updateParams({ page: String(p) })}
-              style={{
-                padding: "4px 12px",
-                border: "1px solid #d1d5db",
-                borderRadius: 4,
-                background: p === page ? "#3b82f6" : "#fff",
-                color: p === page ? "#fff" : "#1e293b",
-                cursor: "pointer",
-              }}
             >
               {p}
             </button>

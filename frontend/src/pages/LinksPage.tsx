@@ -11,60 +11,6 @@ interface InternalLink {
   sortOrder: number;
 }
 
-const primaryBtnStyle: React.CSSProperties = {
-  padding: "8px 16px",
-  background: "#3b82f6",
-  color: "#fff",
-  border: "none",
-  borderRadius: 4,
-  cursor: "pointer",
-};
-
-const submitBtnStyle: React.CSSProperties = {
-  padding: "8px 24px",
-  background: "#10b981",
-  color: "#fff",
-  border: "none",
-  borderRadius: 4,
-  cursor: "pointer",
-};
-
-const deleteBtnStyle: React.CSSProperties = {
-  padding: "4px 8px",
-  background: "#ef4444",
-  color: "#fff",
-  border: "none",
-  borderRadius: 4,
-  cursor: "pointer",
-  fontSize: 12,
-};
-
-const editBtnStyle: React.CSSProperties = {
-  padding: "4px 8px",
-  background: "#f59e0b",
-  color: "#fff",
-  border: "none",
-  borderRadius: 4,
-  cursor: "pointer",
-  fontSize: 12,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "8px",
-  border: "1px solid #d1d5db",
-  borderRadius: 4,
-  fontSize: 14,
-  boxSizing: "border-box",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: 13,
-  color: "#374151",
-  marginBottom: 4,
-};
-
 export function LinksPage() {
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "editor";
@@ -152,15 +98,15 @@ export function LinksPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, margin: 0 }}>リンク集</h1>
+      <div className="page-header flex items-center justify-between">
+        <h1 className="page-title">リンク集</h1>
         {canEdit && (
           <button
+            className="btn btn-primary"
             onClick={() => {
               resetForm();
               setShowForm((prev) => !prev);
             }}
-            style={primaryBtnStyle}
           >
             {showForm && !editingId ? "キャンセル" : "新規リンク"}
           </button>
@@ -168,27 +114,14 @@ export function LinksPage() {
       </div>
 
       {canEdit && showForm && (
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            background: "#f8fafc",
-            border: "1px solid #e2e8f0",
-            borderRadius: 8,
-            padding: 20,
-            marginBottom: 24,
-          }}
-        >
-          <h2 style={{ fontSize: 16, marginTop: 0, marginBottom: 16 }}>
-            {editingId ? "リンクを編集" : "新規リンクを追加"}
-          </h2>
-          {error && (
-            <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 12 }}>{error}</p>
-          )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <form className="form-panel" onSubmit={handleSubmit}>
+          <h3>{editingId ? "リンクを編集" : "新規リンクを追加"}</h3>
+          {error && <div className="alert alert-error">{error}</div>}
+          <div className="form-grid">
             <div>
-              <label style={labelStyle}>タイトル *</label>
+              <label className="label">タイトル *</label>
               <input
-                style={inputStyle}
+                className="input"
                 type="text"
                 required
                 value={form.title}
@@ -196,9 +129,9 @@ export function LinksPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>URL *</label>
+              <label className="label">URL *</label>
               <input
-                style={inputStyle}
+                className="input"
                 type="text"
                 required
                 value={form.url}
@@ -206,9 +139,9 @@ export function LinksPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>カテゴリ *</label>
+              <label className="label">カテゴリ *</label>
               <input
-                style={inputStyle}
+                className="input"
                 type="text"
                 required
                 list="category-list"
@@ -222,111 +155,95 @@ export function LinksPage() {
               </datalist>
             </div>
             <div>
-              <label style={labelStyle}>表示順</label>
+              <label className="label">表示順</label>
               <input
-                style={inputStyle}
+                className="input"
                 type="number"
                 value={form.sortOrder}
                 onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })}
               />
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>説明</label>
+              <label className="label">説明</label>
               <input
-                style={inputStyle}
+                className="input"
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-            <button type="submit" style={submitBtnStyle}>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary">
               {editingId ? "更新" : "追加"}
             </button>
-            <button type="button" onClick={resetForm} style={{ ...primaryBtnStyle, background: "#6b7280" }}>
+            <button type="button" className="btn btn-ghost" onClick={resetForm}>
               キャンセル
             </button>
           </div>
         </form>
       )}
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+      <div className="pill-filter mb-6">
         <button
+          className={`pill${!selectedCategory ? " active" : ""}`}
           onClick={() => setSelectedCategory("")}
-          style={{
-            padding: "6px 16px",
-            border: "1px solid #d1d5db",
-            borderRadius: 20,
-            background: !selectedCategory ? "#3b82f6" : "#fff",
-            color: !selectedCategory ? "#fff" : "#1e293b",
-            cursor: "pointer",
-          }}
         >
           すべて
         </button>
         {categories.map((c) => (
           <button
             key={c}
+            className={`pill${selectedCategory === c ? " active" : ""}`}
             onClick={() => setSelectedCategory(c)}
-            style={{
-              padding: "6px 16px",
-              border: "1px solid #d1d5db",
-              borderRadius: 20,
-              background: selectedCategory === c ? "#3b82f6" : "#fff",
-              color: selectedCategory === c ? "#fff" : "#1e293b",
-              cursor: "pointer",
-            }}
           >
             {c}
           </button>
         ))}
       </div>
 
-      {Object.entries(groupedLinks).map(([cat, items]) => (
-        <div key={cat} style={{ marginBottom: 24 }}>
-          <h2 style={{ fontSize: 16, color: "#64748b", marginBottom: 12 }}>{cat}</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-            {items.map((link) => (
-              <div key={link.id} style={{ position: "relative" }}>
+      {Object.entries(groupedLinks).map(([cat, items], groupIdx) => (
+        <div key={cat} className="mb-6">
+          <h2 className="section-title">{cat}</h2>
+          <div className="grid-auto">
+            {items.map((link, idx) => (
+              <div
+                key={link.id}
+                className="animate-in"
+                style={{ animationDelay: `${(groupIdx * items.length + idx) * 60}ms`, position: "relative" }}
+              >
                 <a
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    display: "block",
-                    padding: 16,
-                    paddingRight: canEdit ? 80 : 16,
-                    background: "#fff",
-                    borderRadius: 8,
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                    textDecoration: "none",
-                    color: "#1e293b",
-                  }}
+                  className="link-card"
+                  style={canEdit ? { paddingRight: "calc(var(--sp-6) + 80px)" } : undefined}
                 >
-                  <h3 style={{ fontSize: 14, color: "#3b82f6", marginBottom: 4 }}>{link.title}</h3>
-                  {link.description && <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>{link.description}</p>}
+                  <div className="link-card-title">{link.title}</div>
+                  {link.description && (
+                    <div className="link-card-desc">{link.description}</div>
+                  )}
                 </a>
                 {canEdit && (
                   <div
-                    style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 4 }}
+                    style={{ position: "absolute", top: "var(--sp-3)", right: "var(--sp-3)", display: "flex", gap: "var(--sp-1)" }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
+                      className="btn btn-sm btn-warn"
                       onClick={(e) => {
                         e.preventDefault();
                         startEdit(link);
                       }}
-                      style={editBtnStyle}
                     >
                       編集
                     </button>
                     <button
+                      className="btn btn-sm btn-danger"
                       onClick={(e) => {
                         e.preventDefault();
                         handleDelete(link);
                       }}
-                      style={deleteBtnStyle}
                     >
                       削除
                     </button>
@@ -338,7 +255,9 @@ export function LinksPage() {
         </div>
       ))}
 
-      {links.length === 0 && <p style={{ color: "#94a3b8" }}>リンクはありません</p>}
+      {links.length === 0 && (
+        <div className="empty-state">リンクはありません</div>
+      )}
     </div>
   );
 }

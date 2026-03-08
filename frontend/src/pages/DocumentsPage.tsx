@@ -20,36 +20,6 @@ interface Document {
   createdBy: string;
 }
 
-const editBtnStyle: React.CSSProperties = {
-  padding: "4px 8px",
-  background: "#f59e0b",
-  color: "#fff",
-  border: "none",
-  borderRadius: 4,
-  cursor: "pointer",
-  fontSize: 12,
-  marginRight: 4,
-};
-
-const deleteBtnStyle: React.CSSProperties = {
-  padding: "4px 8px",
-  background: "#ef4444",
-  color: "#fff",
-  border: "none",
-  borderRadius: 4,
-  cursor: "pointer",
-  fontSize: 12,
-};
-
-const createBtnStyle: React.CSSProperties = {
-  padding: "8px 16px",
-  background: "#3b82f6",
-  color: "#fff",
-  border: "none",
-  borderRadius: 4,
-  cursor: "pointer",
-};
-
 export function DocumentsPage() {
   const { isAdmin } = useAuth();
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -197,134 +167,176 @@ export function DocumentsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 24, marginBottom: 24 }}>ドキュメント</h1>
+      <div className="page-header">
+        <h1 className="page-title">ドキュメント</h1>
+      </div>
 
-      {error && (
-        <div style={{ marginBottom: 12, padding: "8px 12px", background: "#fee2e2", color: "#dc2626", borderRadius: 4, fontSize: 14 }}>
-          {error}
-        </div>
-      )}
+      {error && <div className="alert alert-error">{error}</div>}
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="toolbar">
         <input
+          className="input"
+          style={{ flex: 1, minWidth: 200 }}
           type="text"
           placeholder="ファイル名・タイトルで検索..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4, flex: 1, minWidth: 200 }}
         />
-        <button onClick={() => { setShowFolderInput((v) => !v); setNewFolderName(""); }} style={createBtnStyle}>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            setShowFolderInput((v) => !v);
+            setNewFolderName("");
+          }}
+        >
           新規フォルダ
         </button>
-        <button onClick={() => { setShowDocForm((v) => !v); setEditingDocId(null); setDocForm({ title: "", fileUrl: "", fileName: "", fileSize: 0 }); }} style={createBtnStyle}>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            setShowDocForm((v) => !v);
+            setEditingDocId(null);
+            setDocForm({ title: "", fileUrl: "", fileName: "", fileSize: 0 });
+          }}
+        >
           新規ドキュメント
         </button>
       </div>
 
       {showFolderInput && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
+        <div className="toolbar mb-4">
           <input
+            className="input"
+            style={{ flex: 1 }}
             type="text"
             placeholder="フォルダ名"
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
-            style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4, flex: 1 }}
             autoFocus
           />
-          <button onClick={handleCreateFolder} style={createBtnStyle}>作成</button>
-          <button onClick={() => setShowFolderInput(false)} style={{ ...createBtnStyle, background: "#6b7280" }}>キャンセル</button>
+          <button className="btn btn-primary" onClick={handleCreateFolder}>作成</button>
+          <button className="btn btn-ghost" onClick={() => setShowFolderInput(false)}>キャンセル</button>
         </div>
       )}
 
       {showDocForm && (
-        <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-          <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 16 }}>{editingDocId ? "ドキュメント編集" : "新規ドキュメント"}</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <input
-              type="text"
-              placeholder="タイトル"
-              value={docForm.title}
-              onChange={(e) => setDocForm((f) => ({ ...f, title: e.target.value }))}
-              style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4 }}
-            />
-            <input
-              type="text"
-              placeholder="ファイルURL（例: https://storage.example.com/file.pdf）"
-              value={docForm.fileUrl}
-              onChange={(e) => setDocForm((f) => ({ ...f, fileUrl: e.target.value }))}
-              style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4 }}
-            />
-            <input
-              type="text"
-              placeholder="ファイル名（例: document.pdf）"
-              value={docForm.fileName}
-              onChange={(e) => setDocForm((f) => ({ ...f, fileName: e.target.value }))}
-              style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4 }}
-            />
-            <input
-              type="number"
-              placeholder="ファイルサイズ（バイト）"
-              value={docForm.fileSize || ""}
-              onChange={(e) => setDocForm((f) => ({ ...f, fileSize: Number(e.target.value) }))}
-              style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4 }}
-            />
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={editingDocId ? handleEditDoc : handleCreateDoc} style={createBtnStyle}>
-                {editingDocId ? "更新" : "作成"}
-              </button>
-              <button onClick={cancelDocForm} style={{ ...createBtnStyle, background: "#6b7280" }}>キャンセル</button>
+        <div className="form-panel">
+          <h3>{editingDocId ? "ドキュメント編集" : "新規ドキュメント"}</h3>
+          <div className="form-grid" style={{ gridTemplateColumns: "1fr" }}>
+            <div>
+              <label className="label">タイトル</label>
+              <input
+                className="input"
+                type="text"
+                placeholder="タイトル"
+                value={docForm.title}
+                onChange={(e) => setDocForm((f) => ({ ...f, title: e.target.value }))}
+              />
             </div>
+            <div>
+              <label className="label">ファイルURL</label>
+              <input
+                className="input"
+                type="text"
+                placeholder="ファイルURL（例: https://storage.example.com/file.pdf）"
+                value={docForm.fileUrl}
+                onChange={(e) => setDocForm((f) => ({ ...f, fileUrl: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="label">ファイル名</label>
+              <input
+                className="input"
+                type="text"
+                placeholder="ファイル名（例: document.pdf）"
+                value={docForm.fileName}
+                onChange={(e) => setDocForm((f) => ({ ...f, fileName: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="label">ファイルサイズ（バイト）</label>
+              <input
+                className="input"
+                type="number"
+                placeholder="ファイルサイズ（バイト）"
+                value={docForm.fileSize || ""}
+                onChange={(e) => setDocForm((f) => ({ ...f, fileSize: Number(e.target.value) }))}
+              />
+            </div>
+          </div>
+          <div className="form-actions">
+            <button className="btn btn-primary" onClick={editingDocId ? handleEditDoc : handleCreateDoc}>
+              {editingDocId ? "更新" : "作成"}
+            </button>
+            <button className="btn btn-ghost" onClick={cancelDocForm}>キャンセル</button>
           </div>
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 16, fontSize: 14 }}>
-        <button
-          onClick={() => navigateToBreadcrumb(-1)}
-          style={{ background: "none", border: "none", color: "#3b82f6", cursor: "pointer", padding: 0 }}
-        >
-          ルート
-        </button>
+      <div className="breadcrumb">
+        <button onClick={() => navigateToBreadcrumb(-1)}>ルート</button>
         {folderPath.map((f, i) => (
-          <span key={f.id}>
-            <span style={{ color: "#94a3b8" }}> / </span>
-            <button
-              onClick={() => navigateToBreadcrumb(i)}
-              style={{ background: "none", border: "none", color: i === folderPath.length - 1 ? "#1e293b" : "#3b82f6", cursor: "pointer", padding: 0 }}
-            >
-              {f.name}
-            </button>
+          <span key={f.id} className="flex items-center">
+            <span className="separator">/</span>
+            {i === folderPath.length - 1 ? (
+              <span className="current">{f.name}</span>
+            ) : (
+              <button onClick={() => navigateToBreadcrumb(i)}>{f.name}</button>
+            )}
           </span>
         ))}
       </div>
 
-      <div style={{ background: "#fff", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+      <div className="card">
         {folders.length === 0 && documents.length === 0 && (
-          <p style={{ padding: 24, color: "#94a3b8", textAlign: "center" }}>アイテムはありません</p>
+          <div className="empty-state">アイテムはありません</div>
         )}
 
-        {folders.map((f) => (
-          <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderBottom: "1px solid #f1f5f9" }}>
-            <span style={{ fontSize: 20, cursor: "pointer" }} onClick={() => navigateToFolder(f)}>&#128193;</span>
-            <span style={{ flex: 1, cursor: "pointer" }} onClick={() => navigateToFolder(f)}>{f.name}</span>
-            <button onClick={() => handleRenameFolder(f)} style={editBtnStyle}>名前変更</button>
-            <button onClick={() => handleDeleteFolder(f)} style={deleteBtnStyle}>削除</button>
+        {folders.map((f, idx) => (
+          <div key={f.id} className={`file-item animate-in stagger-${Math.min(idx + 1, 6)}`}>
+            <div
+              className="file-icon folder"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigateToFolder(f)}
+            >
+              📁
+            </div>
+            <span
+              className="flex-1"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigateToFolder(f)}
+            >
+              {f.name}
+            </span>
+            <div className="flex gap-2">
+              <button className="btn btn-sm btn-warn" onClick={() => handleRenameFolder(f)}>名前変更</button>
+              <button className="btn btn-sm btn-danger" onClick={() => handleDeleteFolder(f)}>削除</button>
+            </div>
           </div>
         ))}
 
-        {documents.map((doc) => (
-          <div key={doc.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderBottom: "1px solid #f1f5f9" }}>
-            <span style={{ fontSize: 20 }}>&#128196;</span>
-            <div style={{ flex: 1 }}>
+        {documents.map((doc, idx) => (
+          <div key={doc.id} className={`file-item animate-in stagger-${Math.min(folders.length + idx + 1, 6)}`}>
+            <div className="file-icon doc">📄</div>
+            <div className="flex-1">
               <div style={{ fontWeight: 500 }}>{doc.title}</div>
-              <div style={{ fontSize: 12, color: "#94a3b8" }}>
+              <div className="text-xs text-muted">
                 {doc.filename} | v{doc.currentVersion} | {new Date(doc.updatedAt).toLocaleDateString("ja-JP")}
               </div>
             </div>
-            <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", fontSize: 14, marginRight: 8 }}>ダウンロード</a>
-            <button onClick={() => startEditDoc(doc)} style={editBtnStyle}>編集</button>
-            <button onClick={() => handleDeleteDoc(doc)} style={deleteBtnStyle}>削除</button>
+            <div className="flex gap-2 items-center">
+              <a
+                href={doc.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-sm btn-ghost"
+              >
+                ダウンロード
+              </a>
+              <button className="btn btn-sm btn-warn" onClick={() => startEditDoc(doc)}>編集</button>
+              <button className="btn btn-sm btn-danger" onClick={() => handleDeleteDoc(doc)}>削除</button>
+            </div>
           </div>
         ))}
       </div>

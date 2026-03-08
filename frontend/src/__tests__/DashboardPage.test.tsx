@@ -32,9 +32,9 @@ describe("DashboardPage", () => {
 
     renderDashboard();
 
-    expect(screen.getByText("ダッシュボード")).toBeInTheDocument();
+    expect(screen.getByText("管理者 さん")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText(/管理者/)).toBeInTheDocument();
+      expect(screen.getByText("未読お知らせ")).toBeInTheDocument();
     });
   });
 

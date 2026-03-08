@@ -9,6 +9,18 @@ interface User {
   createdAt: string;
 }
 
+const roleLabelMap: Record<string, string> = {
+  admin: "管理者",
+  editor: "エディター",
+  member: "メンバー",
+};
+
+const roleBadgeClass: Record<string, string> = {
+  admin: "badge badge-accent",
+  editor: "badge badge-info",
+  member: "badge badge-default",
+};
+
 export function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [showCreate, setShowCreate] = useState(false);
@@ -57,77 +69,119 @@ export function UsersPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24 }}>ユーザー管理</h1>
+      <div className="page-header flex items-center justify-between">
+        <h1 className="page-title">ユーザー管理</h1>
         <button
-          onClick={() => setShowCreate(!showCreate)}
-          style={{ padding: "8px 16px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
+          className="btn btn-primary"
+          onClick={() => {
+            setShowCreate(!showCreate);
+            setError("");
+          }}
         >
           {showCreate ? "キャンセル" : "新規ユーザー"}
         </button>
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} style={{ background: "#fff", padding: 20, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", marginBottom: 24 }}>
-          {error && <p style={{ color: "#ef4444", marginBottom: 12, fontSize: 14 }}>{error}</p>}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>名前</label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }} />
+        <div className="form-panel animate-in">
+          <h3>新規ユーザー</h3>
+          {error && <div className="alert alert-error">{error}</div>}
+          <form onSubmit={handleCreate}>
+            <div className="form-grid">
+              <div>
+                <label className="label">名前</label>
+                <input
+                  className="input"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">メール</label>
+                <input
+                  className="input"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">パスワード</label>
+                <input
+                  className="input"
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">ロール</label>
+                <select
+                  className="select"
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                >
+                  <option value="member">メンバー</option>
+                  <option value="editor">エディター</option>
+                  <option value="admin">管理者</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>メール</label>
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }} />
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary">作成</button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => { setShowCreate(false); setError(""); }}
+              >
+                キャンセル
+              </button>
             </div>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>パスワード</label>
-              <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }} />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>ロール</label>
-              <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, boxSizing: "border-box" }}>
-                <option value="member">メンバー</option>
-                <option value="editor">エディター</option>
-                <option value="admin">管理者</option>
-              </select>
-            </div>
-          </div>
-          <button type="submit" style={{ marginTop: 12, padding: "8px 24px", background: "#10b981", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>作成</button>
-        </form>
+          </form>
+        </div>
       )}
 
-      <div style={{ background: "#fff", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <div className="table-wrap animate-in stagger-1">
+        <table className="table">
           <thead>
-            <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-              <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>名前</th>
-              <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>メール</th>
-              <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>ロール</th>
-              <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>作成日</th>
-              <th style={{ padding: 12, textAlign: "left", fontSize: 14 }}>操作</th>
+            <tr>
+              <th>名前</th>
+              <th>メール</th>
+              <th>ロール</th>
+              <th>作成日</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                <td style={{ padding: 12 }}>{u.name}</td>
-                <td style={{ padding: 12, color: "#64748b" }}>{u.email}</td>
-                <td style={{ padding: 12 }}>
-                  <select
-                    value={u.role}
-                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                    style={{ padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 4 }}
-                  >
-                    <option value="member">メンバー</option>
-                    <option value="editor">エディター</option>
-                    <option value="admin">管理者</option>
-                  </select>
+              <tr key={u.id}>
+                <td>{u.name}</td>
+                <td>{u.email}</td>
+                <td>
+                  <div className="flex items-center gap-2">
+                    <span className={roleBadgeClass[u.role] ?? "badge badge-default"}>
+                      {roleLabelMap[u.role] ?? u.role}
+                    </span>
+                    <select
+                      className="select"
+                      style={{ width: "auto", padding: "var(--sp-1) var(--sp-3)", paddingRight: "var(--sp-8)" }}
+                      value={u.role}
+                      onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                    >
+                      <option value="member">メンバー</option>
+                      <option value="editor">エディター</option>
+                      <option value="admin">管理者</option>
+                    </select>
+                  </div>
                 </td>
-                <td style={{ padding: 12, color: "#94a3b8", fontSize: 14 }}>{new Date(u.createdAt).toLocaleDateString("ja-JP")}</td>
-                <td style={{ padding: 12 }}>
+                <td>{new Date(u.createdAt).toLocaleDateString("ja-JP")}</td>
+                <td>
                   <button
+                    className="btn btn-sm btn-danger"
                     onClick={() => handleDelete(u)}
-                    style={{ padding: "4px 8px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}
                   >
                     削除
                   </button>

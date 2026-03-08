@@ -18,11 +18,6 @@ interface ScheduleEvent {
   createdBy: string;
 }
 
-const btnPrimary: React.CSSProperties = { padding: "8px 16px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" };
-const btnSubmit: React.CSSProperties = { padding: "8px 24px", background: "#10b981", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" };
-const btnDelete: React.CSSProperties = { padding: "4px 8px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 };
-const btnEdit: React.CSSProperties = { padding: "4px 8px", background: "#f59e0b", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 };
-
 export function SchedulePage() {
   const { isAdmin } = useAuth();
 
@@ -181,92 +176,93 @@ export function SchedulePage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 24, marginBottom: 24 }}>スケジュール</h1>
-
-      {/* ---- Header row: nav + team filter + new event button ---- */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={prevMonth} style={{ padding: "4px 12px", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", background: "#fff" }}>&larr;</button>
-          <h2 style={{ fontSize: 18, margin: 0 }}>{year}年{month}月</h2>
-          <button onClick={nextMonth} style={{ padding: "4px 12px", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", background: "#fff" }}>&rarr;</button>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <select
-            value={selectedTeam}
-            onChange={(e) => setSelectedTeam(e.target.value)}
-            style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4 }}
-          >
-            <option value="">全チーム</option>
-            {teams.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-          <button
-            style={btnPrimary}
-            onClick={() => { resetEventForm(); setShowEventForm((v) => !v); }}
-          >
-            新規イベント
-          </button>
-        </div>
+      {/* ---- Page header ---- */}
+      <div className="page-header animate-in">
+        <h1 className="page-title">スケジュール</h1>
       </div>
 
-      {/* ---- Event create/edit form ---- */}
+      {/* ---- Toolbar: month nav + team filter + new event button ---- */}
+      <div className="toolbar">
+        <button className="btn btn-ghost" onClick={prevMonth}>&larr;</button>
+        <h2 className="font-display" style={{ fontSize: "var(--fs-md)", margin: 0 }}>{year}年{month}月</h2>
+        <button className="btn btn-ghost" onClick={nextMonth}>&rarr;</button>
+        <div style={{ flex: 1 }} />
+        <select
+          className="select"
+          style={{ width: "auto" }}
+          value={selectedTeam}
+          onChange={(e) => setSelectedTeam(e.target.value)}
+        >
+          <option value="">全チーム</option>
+          {teams.map((t) => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+        <button
+          className="btn btn-primary"
+          onClick={() => { resetEventForm(); setShowEventForm((v) => !v); }}
+        >
+          新規イベント
+        </button>
+      </div>
+
+      {/* ---- Event create/edit form panel ---- */}
       {showEventForm && (
-        <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 16, marginBottom: 24 }}>
-          <h3 style={{ margin: "0 0 12px" }}>{editingEventId ? "イベント編集" : "新規イベント作成"}</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <label>
-              タイトル *
+        <div className="form-panel animate-in">
+          <h3>{editingEventId ? "イベント編集" : "新規イベント作成"}</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+            <div>
+              <label className="label">タイトル *</label>
               <input
+                className="input"
                 value={eventForm.title}
                 onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))}
-                style={{ display: "block", width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, marginTop: 4 }}
                 placeholder="イベントタイトル"
               />
-            </label>
-            <label>
-              説明
+            </div>
+            <div>
+              <label className="label">説明</label>
               <textarea
+                className="input"
                 value={eventForm.description}
                 onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))}
-                style={{ display: "block", width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, marginTop: 4, minHeight: 60 }}
                 placeholder="説明（任意）"
               />
-            </label>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              <label>
-                開始日時 *
+            </div>
+            <div className="form-grid">
+              <div>
+                <label className="label">開始日時 *</label>
                 <input
+                  className="input"
                   type="datetime-local"
                   value={eventForm.startAt}
                   onChange={(e) => setEventForm((f) => ({ ...f, startAt: e.target.value }))}
-                  style={{ display: "block", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, marginTop: 4 }}
                 />
-              </label>
-              <label>
-                終了日時 *
+              </div>
+              <div>
+                <label className="label">終了日時 *</label>
                 <input
+                  className="input"
                   type="datetime-local"
                   value={eventForm.endAt}
                   onChange={(e) => setEventForm((f) => ({ ...f, endAt: e.target.value }))}
-                  style={{ display: "block", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, marginTop: 4 }}
                 />
-              </label>
+              </div>
             </div>
-            <label>
-              チーム
+            <div>
+              <label className="label">チーム</label>
               <select
+                className="select"
                 value={eventForm.teamId}
                 onChange={(e) => setEventForm((f) => ({ ...f, teamId: e.target.value }))}
-                style={{ display: "block", padding: 8, border: "1px solid #d1d5db", borderRadius: 4, marginTop: 4 }}
               >
                 <option value="">チームなし</option>
                 {teams.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            </div>
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={eventForm.allDay}
@@ -274,11 +270,11 @@ export function SchedulePage() {
               />
               終日イベント
             </label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button style={btnSubmit} onClick={handleSubmitEvent}>
+            <div className="form-actions">
+              <button className="btn btn-primary" onClick={handleSubmitEvent}>
                 {editingEventId ? "更新" : "作成"}
               </button>
-              <button onClick={resetEventForm} style={{ padding: "8px 16px", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", background: "#fff" }}>
+              <button className="btn btn-ghost" onClick={resetEventForm}>
                 キャンセル
               </button>
             </div>
@@ -287,84 +283,77 @@ export function SchedulePage() {
       )}
 
       {/* ---- Calendar grid ---- */}
-      <div style={{ background: "#fff", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
-          {dayNames.map((d) => (
-            <div key={d} style={{ padding: 8, textAlign: "center", fontWeight: "bold", fontSize: 14, background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>{d}</div>
-          ))}
-          {Array.from({ length: firstDayOfWeek }, (_, i) => (
-            <div key={`empty-${i}`} style={{ padding: 8, minHeight: 80, borderBottom: "1px solid #f1f5f9", borderRight: "1px solid #f1f5f9" }} />
-          ))}
-          {Array.from({ length: daysInMonth }, (_, i) => {
-            const day = i + 1;
-            const dayEvents = getEventsForDay(day);
-            const isToday = new Date().getFullYear() === year && new Date().getMonth() + 1 === month && new Date().getDate() === day;
-            return (
-              <div key={day} style={{ padding: 4, minHeight: 80, borderBottom: "1px solid #f1f5f9", borderRight: "1px solid #f1f5f9" }}>
-                <div style={{
-                  fontSize: 12,
-                  fontWeight: isToday ? "bold" : "normal",
-                  color: isToday ? "#3b82f6" : "#1e293b",
-                  background: isToday ? "#dbeafe" : "transparent",
-                  borderRadius: "50%",
-                  width: 24,
-                  height: 24,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 2,
-                }}>
-                  {day}
-                </div>
-                {dayEvents.slice(0, 3).map((e) => (
-                  <div
-                    key={e.id}
-                    onClick={() => setSelectedEvent(e)}
-                    style={{ fontSize: 10, padding: "1px 4px", marginBottom: 1, background: "#dbeafe", borderRadius: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "pointer" }}
-                    title={e.title}
-                  >
-                    {e.title}
-                  </div>
-                ))}
-                {dayEvents.length > 3 && <div style={{ fontSize: 10, color: "#94a3b8" }}>+{dayEvents.length - 3}件</div>}
+      <div className="calendar-grid animate-in stagger-1">
+        {dayNames.map((d) => (
+          <div key={d} className="calendar-header-cell">{d}</div>
+        ))}
+        {Array.from({ length: firstDayOfWeek }, (_, i) => (
+          <div key={`empty-${i}`} className="calendar-cell" />
+        ))}
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const dayEvents = getEventsForDay(day);
+          const isToday =
+            new Date().getFullYear() === year &&
+            new Date().getMonth() + 1 === month &&
+            new Date().getDate() === day;
+          return (
+            <div key={day} className="calendar-cell">
+              <div className={`calendar-day-num${isToday ? " today" : ""}`}>
+                {day}
               </div>
-            );
-          })}
-        </div>
+              {dayEvents.slice(0, 3).map((e) => (
+                <div
+                  key={e.id}
+                  className="calendar-event"
+                  onClick={() => setSelectedEvent(e)}
+                  title={e.title}
+                >
+                  {e.title}
+                </div>
+              ))}
+              {dayEvents.length > 3 && (
+                <div className="text-xs text-muted" style={{ padding: "1px 6px" }}>
+                  +{dayEvents.length - 3}件
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* ---- Event detail overlay ---- */}
       {selectedEvent && (
         <div
-          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}
+          className="overlay"
           onClick={() => setSelectedEvent(null)}
         >
           <div
-            style={{ background: "#fff", borderRadius: 8, padding: 24, maxWidth: 400, width: "90%", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+            className="modal animate-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ margin: "0 0 8px", fontSize: 18 }}>{selectedEvent.title}</h3>
+            <h3 style={{ margin: "0 0 var(--sp-2)", fontSize: "var(--fs-lg)" }}>{selectedEvent.title}</h3>
             {selectedEvent.description && (
-              <p style={{ margin: "0 0 8px", color: "#475569", fontSize: 14 }}>{selectedEvent.description}</p>
+              <p className="text-sm text-muted" style={{ marginBottom: "var(--sp-3)" }}>{selectedEvent.description}</p>
             )}
-            <p style={{ margin: "0 0 4px", fontSize: 13, color: "#64748b" }}>
+            <p className="text-xs text-muted" style={{ marginBottom: "var(--sp-1)" }}>
               開始: {new Date(selectedEvent.startDate).toLocaleString("ja-JP")}
             </p>
-            <p style={{ margin: "0 0 4px", fontSize: 13, color: "#64748b" }}>
+            <p className="text-xs text-muted" style={{ marginBottom: "var(--sp-1)" }}>
               終了: {new Date(selectedEvent.endDate).toLocaleString("ja-JP")}
             </p>
             {selectedEvent.isAllDay && (
-              <p style={{ margin: "0 0 4px", fontSize: 13, color: "#64748b" }}>終日イベント</p>
+              <p className="text-xs text-muted" style={{ marginBottom: "var(--sp-1)" }}>終日イベント</p>
             )}
             {selectedEvent.teamId && (
-              <p style={{ margin: "0 0 12px", fontSize: 13, color: "#64748b" }}>
+              <p className="text-xs text-muted" style={{ marginBottom: "var(--sp-4)" }}>
                 チーム: {teams.find((t) => t.id === selectedEvent.teamId)?.name ?? selectedEvent.teamId}
               </p>
             )}
-            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <button style={btnEdit} onClick={() => handleEditEvent(selectedEvent)}>編集</button>
-              <button style={btnDelete} onClick={() => handleDeleteEvent(selectedEvent.id)}>削除</button>
-              <button onClick={() => setSelectedEvent(null)} style={{ padding: "4px 8px", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", background: "#fff", fontSize: 12, marginLeft: "auto" }}>閉じる</button>
+            <div className="flex gap-2" style={{ marginTop: "var(--sp-5)" }}>
+              <button className="btn btn-sm btn-warn" onClick={() => handleEditEvent(selectedEvent)}>編集</button>
+              <button className="btn btn-sm btn-danger" onClick={() => handleDeleteEvent(selectedEvent.id)}>削除</button>
+              <button className="btn btn-sm btn-ghost" style={{ marginLeft: "auto" }} onClick={() => setSelectedEvent(null)}>閉じる</button>
             </div>
           </div>
         </div>
@@ -372,51 +361,56 @@ export function SchedulePage() {
 
       {/* ---- Team management (admin only) ---- */}
       {isAdmin && (
-        <div style={{ marginTop: 40 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 16 }}>チーム管理</h2>
-          <div style={{ background: "#fff", borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", padding: 16 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
-              <thead>
-                <tr style={{ borderBottom: "2px solid #e2e8f0" }}>
-                  <th style={{ textAlign: "left", padding: "8px 12px", fontSize: 14 }}>チーム名</th>
-                  <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 14 }}>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teams.map((t) => (
-                  <tr key={t.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                    <td style={{ padding: "8px 12px", fontSize: 14 }}>{t.name}</td>
-                    <td style={{ padding: "8px 12px", textAlign: "right" }}>
-                      <div style={{ display: "inline-flex", gap: 6 }}>
-                        <button style={btnEdit} onClick={() => handleEditTeam(t)}>編集</button>
-                        <button style={btnDelete} onClick={() => handleDeleteTeam(t.id)}>削除</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {teams.length === 0 && (
+        <div className="mt-6 animate-in stagger-2" style={{ marginTop: "var(--sp-10)" }}>
+          <p className="section-title">チーム管理</p>
+          <div className="card card-body">
+            <div className="table-wrap" style={{ marginBottom: "var(--sp-4)" }}>
+              <table className="table">
+                <thead>
                   <tr>
-                    <td colSpan={2} style={{ padding: "12px", textAlign: "center", color: "#94a3b8", fontSize: 14 }}>チームがありません</td>
+                    <th>チーム名</th>
+                    <th style={{ textAlign: "right" }}>操作</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {teams.map((t) => (
+                    <tr key={t.id}>
+                      <td>{t.name}</td>
+                      <td style={{ textAlign: "right" }}>
+                        <div className="flex gap-2" style={{ justifyContent: "flex-end" }}>
+                          <button className="btn btn-sm btn-warn" onClick={() => handleEditTeam(t)}>編集</button>
+                          <button className="btn btn-sm btn-danger" onClick={() => handleDeleteTeam(t.id)}>削除</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {teams.length === 0 && (
+                    <tr>
+                      <td colSpan={2} className="text-muted" style={{ textAlign: "center", padding: "var(--sp-6)" }}>
+                        チームがありません
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
             {!showTeamForm ? (
-              <button style={btnPrimary} onClick={() => setShowTeamForm(true)}>新規チーム</button>
+              <button className="btn btn-primary" onClick={() => setShowTeamForm(true)}>新規チーム</button>
             ) : (
-              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <div className="flex gap-3 items-center" style={{ flexWrap: "wrap" }}>
                 <input
+                  className="input"
+                  style={{ width: "auto", minWidth: 200 }}
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
                   placeholder="チーム名"
-                  style={{ padding: 8, border: "1px solid #d1d5db", borderRadius: 4, minWidth: 200 }}
                   onKeyDown={(e) => { if (e.key === "Enter") handleSubmitTeam(); }}
                 />
-                <button style={btnSubmit} onClick={handleSubmitTeam}>
+                <button className="btn btn-primary" onClick={handleSubmitTeam}>
                   {editingTeamId ? "更新" : "作成"}
                 </button>
-                <button onClick={resetTeamForm} style={{ padding: "8px 16px", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", background: "#fff" }}>
+                <button className="btn btn-ghost" onClick={resetTeamForm}>
                   キャンセル
                 </button>
               </div>

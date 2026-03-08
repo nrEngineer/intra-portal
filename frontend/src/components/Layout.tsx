@@ -1,34 +1,78 @@
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+
+const navItems = [
+  { to: "/", label: "ダッシュボード", icon: "◇" },
+  { to: "/announcements", label: "お知らせ", icon: "◈" },
+  { to: "/employees", label: "社員名簿", icon: "◉" },
+  { to: "/schedule", label: "スケジュール", icon: "◎" },
+  { to: "/links", label: "リンク集", icon: "◆" },
+  { to: "/documents", label: "ドキュメント", icon: "▣" },
+];
 
 export function Layout() {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
     navigate("/login");
   };
 
+  const isActive = (path: string) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
+
+  const roleLabel = (role?: string) => {
+    switch (role) {
+      case "admin": return "Administrator";
+      case "editor": return "Editor";
+      default: return "Member";
+    }
+  };
+
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      <nav style={{ width: 220, background: "#1e293b", color: "#fff", padding: 16 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 24 }}>社内ポータル</h2>
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          <li style={{ marginBottom: 8 }}><Link to="/" style={{ color: "#94a3b8", textDecoration: "none" }}>ダッシュボード</Link></li>
-          <li style={{ marginBottom: 8 }}><Link to="/announcements" style={{ color: "#94a3b8", textDecoration: "none" }}>お知らせ</Link></li>
-          <li style={{ marginBottom: 8 }}><Link to="/employees" style={{ color: "#94a3b8", textDecoration: "none" }}>社員名簿</Link></li>
-          <li style={{ marginBottom: 8 }}><Link to="/schedule" style={{ color: "#94a3b8", textDecoration: "none" }}>スケジュール</Link></li>
-          <li style={{ marginBottom: 8 }}><Link to="/links" style={{ color: "#94a3b8", textDecoration: "none" }}>リンク集</Link></li>
-          <li style={{ marginBottom: 8 }}><Link to="/documents" style={{ color: "#94a3b8", textDecoration: "none" }}>ドキュメント</Link></li>
-          {isAdmin && <li style={{ marginBottom: 8 }}><Link to="/users" style={{ color: "#94a3b8", textDecoration: "none" }}>ユーザー管理</Link></li>}
-        </ul>
-        <div style={{ marginTop: "auto", paddingTop: 24, borderTop: "1px solid #334155" }}>
-          <p style={{ fontSize: 12, color: "#94a3b8" }}>{user?.name}</p>
-          <button onClick={handleLogout} style={{ background: "none", border: "1px solid #475569", color: "#94a3b8", padding: "4px 12px", cursor: "pointer", borderRadius: 4 }}>ログアウト</button>
+    <div className="app-layout">
+      <nav className="sidebar">
+        <div className="sidebar-brand">
+          <h1>社内ポータル</h1>
+          <div className="brand-sub">Intra Portal</div>
+        </div>
+
+        <div className="sidebar-nav">
+          {navItems.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={isActive(item.to) ? "active" : ""}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
+          {isAdmin && (
+            <Link
+              to="/users"
+              className={isActive("/users") ? "active" : ""}
+            >
+              <span className="nav-icon">⚙</span>
+              ユーザー管理
+            </Link>
+          )}
+        </div>
+
+        <div className="sidebar-footer">
+          <div className="user-name">{user?.name}</div>
+          <div className="user-role">{roleLabel(user?.role)}</div>
+          <button onClick={handleLogout} className="logout-btn">
+            ログアウト
+          </button>
         </div>
       </nav>
-      <main style={{ flex: 1, padding: 24, background: "#f8fafc" }}>
+
+      <main className="main-content">
         <Outlet />
       </main>
     </div>

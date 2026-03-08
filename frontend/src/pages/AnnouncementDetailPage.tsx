@@ -28,46 +28,110 @@ export function AnnouncementDetailPage() {
 
   if (error) {
     return (
-      <div>
-        <Link to="/announcements" style={{ color: "#3b82f6", marginBottom: 16, display: "inline-block" }}>&larr; お知らせ一覧に戻る</Link>
-        <p style={{ color: "#ef4444" }}>{error}</p>
+      <div className="animate-in">
+        <div className="breadcrumb">
+          <Link to="/announcements" className="text-sm" style={{ color: "var(--c-info)" }}>
+            &larr; お知らせ一覧に戻る
+          </Link>
+        </div>
+        <div className="alert alert-error">{error}</div>
       </div>
     );
   }
 
   if (!announcement) {
-    return <p style={{ color: "#94a3b8" }}>読み込み中...</p>;
+    return <p className="text-muted text-sm">読み込み中...</p>;
   }
 
   return (
-    <div>
-      <Link to="/announcements" style={{ color: "#3b82f6", marginBottom: 16, display: "inline-block" }}>&larr; お知らせ一覧に戻る</Link>
+    <div className="animate-in">
+      <div className="breadcrumb">
+        <Link to="/announcements" style={{ color: "var(--c-info)", background: "none", border: "none", fontFamily: "var(--font-body)", fontSize: "var(--fs-sm)", cursor: "pointer", padding: 0 }}>
+          &larr; お知らせ一覧
+        </Link>
+        <span className="separator">/</span>
+        <span className="current">{announcement.title}</span>
+      </div>
 
-      <div style={{ background: "#fff", padding: 24, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 12, color: "#64748b", background: "#f1f5f9", padding: "2px 8px", borderRadius: 4 }}>{announcement.category}</span>
-          {announcement.isPinned && <span style={{ fontSize: 12, color: "#f59e0b" }}>&#x1F4CC; ピン留め</span>}
-        </div>
-
-        <h1 style={{ fontSize: 24, marginBottom: 8 }}>{announcement.title}</h1>
-        <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 24 }}>
-          <span>投稿者: {announcement.author}</span>
-          <span style={{ marginLeft: 16 }}>作成: {new Date(announcement.createdAt).toLocaleDateString("ja-JP")}</span>
-          {announcement.updatedAt !== announcement.createdAt && (
-            <span style={{ marginLeft: 16 }}>更新: {new Date(announcement.updatedAt).toLocaleDateString("ja-JP")}</span>
+      <div className="card card-body stagger-1">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="badge badge-default">{announcement.category}</span>
+          {announcement.isPinned && (
+            <span className="text-xs" style={{ color: "var(--c-warning)" }}>
+              📌 ピン留め
+            </span>
           )}
         </div>
 
-        <div style={{ lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{announcement.body}</div>
+        <h1
+          className="page-title"
+          style={{ marginBottom: "var(--sp-3)", lineHeight: "var(--lh-tight)" }}
+        >
+          {announcement.title}
+        </h1>
+
+        <div className="flex gap-4 text-xs text-muted mb-6">
+          <span>投稿者: {announcement.author}</span>
+          <span>作成: {new Date(announcement.createdAt).toLocaleDateString("ja-JP")}</span>
+          {announcement.updatedAt !== announcement.createdAt && (
+            <span>更新: {new Date(announcement.updatedAt).toLocaleDateString("ja-JP")}</span>
+          )}
+        </div>
+
+        <div
+          className="text-sm"
+          style={{
+            lineHeight: "var(--lh-relaxed)",
+            whiteSpace: "pre-wrap",
+            color: "var(--c-text)",
+          }}
+        >
+          {announcement.body}
+        </div>
 
         {announcement.attachments.length > 0 && (
-          <div style={{ marginTop: 24, padding: 16, background: "#f8fafc", borderRadius: 4 }}>
-            <h3 style={{ fontSize: 14, marginBottom: 8 }}>添付ファイル</h3>
-            <ul style={{ listStyle: "none", padding: 0 }}>
+          <div
+            className="mt-6"
+            style={{
+              padding: "var(--sp-5)",
+              background: "var(--c-bg-warm)",
+              borderRadius: "var(--r-md)",
+              border: "1px solid var(--c-border-light)",
+            }}
+          >
+            <p
+              className="text-xs"
+              style={{
+                fontWeight: "var(--fw-bold)",
+                color: "var(--c-text-secondary)",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                fontFamily: "var(--font-display)",
+                marginBottom: "var(--sp-3)",
+              }}
+            >
+              添付ファイル
+            </p>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {announcement.attachments.map((att, i) => (
-                <li key={i} style={{ padding: "4px 0" }}>
-                  <a href={att.url} style={{ color: "#3b82f6" }}>{att.filename}</a>
-                  <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 8 }}>({(att.size / 1024).toFixed(1)} KB)</span>
+                <li
+                  key={i}
+                  className="file-item"
+                  style={{ paddingLeft: 0, paddingRight: 0 }}
+                >
+                  <span className="file-icon doc">📄</span>
+                  <div className="flex-1">
+                    <a
+                      href={att.url}
+                      className="text-sm"
+                      style={{ color: "var(--c-info)", fontWeight: "var(--fw-medium)" }}
+                    >
+                      {att.filename}
+                    </a>
+                    <p className="text-xs text-muted" style={{ marginTop: "var(--sp-1)" }}>
+                      {(att.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>
