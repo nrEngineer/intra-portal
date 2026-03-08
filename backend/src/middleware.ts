@@ -1,0 +1,48 @@
+import { createMiddleware } from "hono/factory";
+import { verifyAccessToken } from "./auth-utils.js";
+import type { User, UserRole } from "./types.js";
+
+type Env = {
+  Variables: {
+    user: User;
+  };
+};
+
+export const authMiddleware = createMiddleware<Env>(async (c, next) => {
+  // Try JWT Bearer token first
+  const authHeader = c.req.header("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    const payload = verifyAccessToken(token);
+    if (payload) {
+      c.set("user", { id: payload.userId, name: payload.userId, role: payload.role });
+      return next();
+    }
+  }
+
+  // Fall back to header-based auth (dev/test)
+  const userId = c.req.header("x-user-id");
+  const userRole = c.req.header("x-user-role");
+  if (userId && userRole) {
+    c.set("user", { id: userId, name: userId, role: userRole as UserRole });
+    return next();
+  }
+
+  return c.json({ error: "Unauthorized" }, 401);
+});
+
+export const adminOnly = createMiddleware<Env>(async (c, next) => {
+  const user = c.get("user");
+  if (user.role !== "admin") {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+  await next();
+});
+
+export const editorOrAdmin = createMiddleware<Env>(async (c, next) => {
+  const user = c.get("user");
+  if (user.role !== "admin" && user.role !== "editor") {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+  await next();
+});
