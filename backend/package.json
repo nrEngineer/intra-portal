@@ -12,7 +12,9 @@
     "db:push": "drizzle-kit push",
     "db:seed": "tsx src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
-    "db:setup": "pnpm db:push && pnpm db:seed"
+    "db:setup": "pnpm db:push && pnpm db:seed",
+    "deploy": "wrangler deploy",
+    "deploy:migrate": "wrangler d1 execute intra-portal --remote --file=migrations/0001_init.sql"
   },
   "keywords": [],
   "author": "",
@@ -36,6 +38,7 @@
     "drizzle-kit": "^0.31.9",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "wrangler": "^4.71.0"
   }
 }

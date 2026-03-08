@@ -5,10 +5,13 @@ import * as schema from "./schema.js";
 export type AppDatabase = LibSQLDatabase<typeof schema>;
 
 let client: Client | null = null;
-let _db: AppDatabase | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _db: any = null;
 
+/** Get the current database instance */
 export function getDb(): AppDatabase {
   if (!_db) {
+    // Auto-init for Node.js (not Workers)
     const dbPath = process.env.DB_PATH || "./data/portal.db";
     client = createClient({ url: `file:${dbPath}` });
     _db = drizzle(client, { schema });
@@ -16,6 +19,12 @@ export function getDb(): AppDatabase {
   return _db;
 }
 
+/** Set the database instance (used by Workers for D1 injection) */
+export function setDb(db: unknown): void {
+  _db = db;
+}
+
+/** Initialize a new libsql database (Node.js only) */
 export async function initDb(url?: string): Promise<AppDatabase> {
   if (client) {
     client.close();

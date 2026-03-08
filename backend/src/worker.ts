@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./db/schema.js";
+import { setDb } from "./db/connection.js";
+import { createTables } from "./db/create-tables.js";
 import { api } from "./routes.js";
 import { auth, users } from "./auth-routes.js";
 import { employees } from "./employee-routes.js";
@@ -12,9 +14,17 @@ import { uploads } from "./upload-routes.js";
 
 type Bindings = {
   DB: D1Database;
+  JWT_SECRET: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
+
+// D1 injection middleware - set DB before any route handler
+app.use("/*", async (c, next) => {
+  const db = drizzle(c.env.DB, { schema });
+  setDb(db);
+  await next();
+});
 
 app.use("/*", cors({ origin: "*", credentials: true }));
 
@@ -26,5 +36,8 @@ app.route("/api/schedule", schedule);
 app.route("/api/links", links);
 app.route("/api/documents", docs);
 app.route("/api/uploads", uploads);
+
+// Health check
+app.get("/health", (c) => c.json({ status: "ok" }));
 
 export default app;

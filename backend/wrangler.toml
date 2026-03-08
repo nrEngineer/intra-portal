@@ -1,9 +1,9 @@
 name = "intra-portal-api"
 main = "src/worker.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 [[d1_databases]]
 binding = "DB"
 database_name = "intra-portal"
-database_id = ""
+database_id = "ae6cfdb8-bdf3-44f1-b499-5df97e75e311"

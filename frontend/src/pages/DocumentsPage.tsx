@@ -21,7 +21,7 @@ interface Document {
 }
 
 export function DocumentsPage() {
-  const { isAdmin } = useAuth();
+  useAuth();
   const [folders, setFolders] = useState<Folder[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
@@ -59,12 +59,6 @@ export function DocumentsPage() {
       setCurrentFolder(folderPath[index].id);
       setFolderPath((prev) => prev.slice(0, index + 1));
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   return (
