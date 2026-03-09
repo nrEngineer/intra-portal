@@ -1,12 +1,17 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { api } from "./routes.js";
-import { auth, users } from "./auth-routes.js";
-import { employees } from "./employee-routes.js";
-import { schedule } from "./schedule-routes.js";
-import { links } from "./link-routes.js";
-import { docs } from "./document-routes.js";
-import { uploads } from "./upload-routes.js";
+import { createContainer } from "./di/container.js";
+import { createAuthMiddleware } from "./infrastructure/http/middleware/auth.middleware.js";
+import { createAuthRoutes, createUserRoutes } from "./infrastructure/http/routes/auth.routes.js";
+import { createAnnouncementRoutes } from "./infrastructure/http/routes/announcement.routes.js";
+import { createEmployeeRoutes } from "./infrastructure/http/routes/employee.routes.js";
+import { createScheduleRoutes } from "./infrastructure/http/routes/schedule.routes.js";
+import { createLinkRoutes } from "./infrastructure/http/routes/link.routes.js";
+import { createDocumentRoutes } from "./infrastructure/http/routes/document.routes.js";
+import { createUploadRoutes } from "./infrastructure/http/routes/upload.routes.js";
+
+export const container = createContainer();
+const authMiddleware = createAuthMiddleware(container.tokenService);
 
 const app = new Hono();
 
@@ -18,13 +23,13 @@ app.use(
   }),
 );
 
-app.route("/api/announcements", api);
-app.route("/api/auth", auth);
-app.route("/api/users", users);
-app.route("/api/employees", employees);
-app.route("/api/schedule", schedule);
-app.route("/api/links", links);
-app.route("/api/documents", docs);
-app.route("/api/uploads", uploads);
+app.route("/api/announcements", createAnnouncementRoutes(container, authMiddleware));
+app.route("/api/auth", createAuthRoutes(container));
+app.route("/api/users", createUserRoutes(container, authMiddleware));
+app.route("/api/employees", createEmployeeRoutes(container, authMiddleware));
+app.route("/api/schedule", createScheduleRoutes(container, authMiddleware));
+app.route("/api/links", createLinkRoutes(container, authMiddleware));
+app.route("/api/documents", createDocumentRoutes(container, authMiddleware));
+app.route("/api/uploads", createUploadRoutes(container, authMiddleware));
 
 export { app };

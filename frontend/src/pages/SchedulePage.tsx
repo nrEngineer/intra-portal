@@ -1,71 +1,53 @@
-import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-
-interface Team {
-  id: string;
-  name: string;
-}
-
-interface ScheduleEvent {
-  id: string;
-  title: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  teamId: string;
-  isAllDay: boolean;
-  createdBy: string;
-}
+import {
+  useTeams,
+  useEvents,
+  useEventCreate,
+  useEventUpdate,
+  useEventDelete,
+  useTeamCreate,
+  useTeamUpdate,
+  useTeamDelete,
+} from "../hooks/useSchedule";
+import type { ScheduleEvent } from "../types/schedule";
 
 export function SchedulePage() {
   const { isAdmin } = useAuth();
 
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [events, setEvents] = useState<ScheduleEvent[]>([]);
   const [selectedTeam, setSelectedTeam] = useState("");
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  });
+  const [currentMonth, setCurrentMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
   // Event CRUD state
   const [showEventForm, setShowEventForm] = useState(false);
   const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", endAt: "", teamId: "", allDay: false });
-  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [editingEventId, setEditingEventId] = useState<number | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
 
   // Team management state
   const [showTeamForm, setShowTeamForm] = useState(false);
   const [teamName, setTeamName] = useState("");
-  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
+  const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
 
-  const loadTeams = () => {
-    api<{ data: Team[] }>("/schedule/teams").then((res) => setTeams(res.data));
-  };
+  // Data fetching
+  const { data: teams = [] } = useTeams();
 
-  const loadEvents = () => {
-    const [year, month] = currentMonth.split("-").map(Number);
-    const startDate = new Date(year, month - 1, 1).toISOString();
-    const endDate = new Date(year, month, 0, 23, 59, 59).toISOString();
+  const startDate = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, "0")}-01`;
+  const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const endDate = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 
-    const params = new URLSearchParams();
-    params.set("startDate", startDate);
-    params.set("endDate", endDate);
-    if (selectedTeam) params.set("teamId", selectedTeam);
+  const { data: events = [] } = useEvents({ startDate, endDate, teamId: selectedTeam ? Number(selectedTeam) : undefined });
 
-    api<{ data: ScheduleEvent[] }>(`/schedule/events?${params.toString()}`).then((res) => setEvents(res.data));
-  };
+  // Mutation hooks
+  const createEvent = useEventCreate();
+  const updateEvent = useEventUpdate();
+  const deleteEvent = useEventDelete();
+  const createTeam = useTeamCreate();
+  const updateTeam = useTeamUpdate();
+  const deleteTeam = useTeamDelete();
 
-  useEffect(() => {
-    loadTeams();
-  }, []);
-
-  useEffect(() => {
-    loadEvents();
-  }, [currentMonth, selectedTeam]);
-
-  const [year, month] = currentMonth.split("-").map(Number);
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth() + 1;
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
   const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
@@ -81,13 +63,11 @@ export function SchedulePage() {
   };
 
   const prevMonth = () => {
-    const d = new Date(year, month - 2, 1);
-    setCurrentMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    setCurrentMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
   };
 
   const nextMonth = () => {
-    const d = new Date(year, month, 1);
-    setCurrentMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    setCurrentMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
   };
 
   // ----- Event CRUD handlers -----
@@ -98,23 +78,21 @@ export function SchedulePage() {
     setShowEventForm(false);
   };
 
-  const handleSubmitEvent = async () => {
+  const handleSubmitEvent = () => {
     if (!eventForm.title || !eventForm.startAt || !eventForm.endAt) return;
     const body = {
       title: eventForm.title,
       description: eventForm.description,
       startDate: new Date(eventForm.startAt).toISOString(),
       endDate: new Date(eventForm.endAt).toISOString(),
-      teamId: eventForm.teamId || undefined,
-      isAllDay: eventForm.allDay,
+      teamId: eventForm.teamId ? Number(eventForm.teamId) : undefined,
     };
     if (editingEventId) {
-      await api(`/schedule/events/${editingEventId}`, { method: "PUT", body });
+      updateEvent.mutate({ id: editingEventId, ...body });
     } else {
-      await api("/schedule/events", { method: "POST", body });
+      createEvent.mutate(body);
     }
     resetEventForm();
-    loadEvents();
   };
 
   const handleEditEvent = (e: ScheduleEvent) => {
@@ -128,19 +106,18 @@ export function SchedulePage() {
       description: e.description ?? "",
       startAt: toLocal(e.startDate),
       endAt: toLocal(e.endDate),
-      teamId: e.teamId ?? "",
-      allDay: e.isAllDay,
+      teamId: e.teamId != null ? String(e.teamId) : "",
+      allDay: false,
     });
     setEditingEventId(e.id);
     setSelectedEvent(null);
     setShowEventForm(true);
   };
 
-  const handleDeleteEvent = async (id: string) => {
+  const handleDeleteEvent = (id: number) => {
     if (!confirm("このイベントを削除しますか？")) return;
-    await api(`/schedule/events/${id}`, { method: "DELETE" });
+    deleteEvent.mutate(id);
     setSelectedEvent(null);
-    loadEvents();
   };
 
   // ----- Team management handlers -----
@@ -151,27 +128,25 @@ export function SchedulePage() {
     setShowTeamForm(false);
   };
 
-  const handleSubmitTeam = async () => {
+  const handleSubmitTeam = () => {
     if (!teamName.trim()) return;
     if (editingTeamId) {
-      await api(`/schedule/teams/${editingTeamId}`, { method: "PUT", body: { name: teamName } });
+      updateTeam.mutate({ id: editingTeamId, name: teamName });
     } else {
-      await api("/schedule/teams", { method: "POST", body: { name: teamName, memberIds: [] } });
+      createTeam.mutate({ name: teamName });
     }
     resetTeamForm();
-    loadTeams();
   };
 
-  const handleEditTeam = (t: Team) => {
+  const handleEditTeam = (t: { id: number; name: string }) => {
     setTeamName(t.name);
     setEditingTeamId(t.id);
     setShowTeamForm(true);
   };
 
-  const handleDeleteTeam = async (id: string) => {
+  const handleDeleteTeam = (id: number) => {
     if (!confirm("このチームを削除しますか？")) return;
-    await api(`/schedule/teams/${id}`, { method: "DELETE" });
-    loadTeams();
+    deleteTeam.mutate(id);
   };
 
   return (
@@ -359,12 +334,9 @@ export function SchedulePage() {
             <p className="text-xs text-muted" style={{ marginBottom: "var(--sp-1)" }}>
               終了: {new Date(selectedEvent.endDate).toLocaleString("ja-JP")}
             </p>
-            {selectedEvent.isAllDay && (
-              <p className="text-xs text-muted" style={{ marginBottom: "var(--sp-1)" }}>終日イベント</p>
-            )}
-            {selectedEvent.teamId && (
+            {selectedEvent.teamId != null && (
               <p className="text-xs text-muted" style={{ marginBottom: "var(--sp-4)" }}>
-                チーム: {teams.find((t) => t.id === selectedEvent.teamId)?.name ?? selectedEvent.teamId}
+                チーム: {teams.find((t) => t.id === selectedEvent.teamId)?.name ?? String(selectedEvent.teamId)}
               </p>
             )}
             <div className="flex gap-2" style={{ marginTop: "var(--sp-5)" }}>

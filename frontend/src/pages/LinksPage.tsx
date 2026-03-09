@@ -1,45 +1,24 @@
-import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-
-interface InternalLink {
-  id: string;
-  title: string;
-  url: string;
-  description?: string;
-  category: string;
-  sortOrder: number;
-}
+import { useLinks, useLinkCategories, useLinkCreate, useLinkUpdate, useLinkDelete } from "../hooks/useLinks";
+import type { InternalLink } from "../types/link";
 
 export function LinksPage() {
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "editor";
 
-  const [links, setLinks] = useState<InternalLink[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: "", url: "", description: "", category: "", sortOrder: 0 });
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ title: "", url: "", description: "", category: "" });
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  const loadLinks = () => {
-    const params = selectedCategory ? `?category=${encodeURIComponent(selectedCategory)}` : "";
-    api<{ data: InternalLink[] }>(`/links${params}`).then((res) => setLinks(res.data));
-  };
+  const { data: categories = [] } = useLinkCategories();
+  const { data: links = [], isLoading } = useLinks({ category: selectedCategory || undefined });
 
-  const loadCategories = () => {
-    api<{ data: string[] }>("/links/categories").then((res) => setCategories(res.data));
-  };
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  useEffect(() => {
-    loadLinks();
-  }, [selectedCategory]);
+  const createMutation = useLinkCreate();
+  const updateMutation = useLinkUpdate();
+  const deleteMutation = useLinkDelete();
 
   const groupedLinks = links.reduce<Record<string, InternalLink[]>>((acc, link) => {
     if (!acc[link.category]) acc[link.category] = [];
@@ -48,7 +27,7 @@ export function LinksPage() {
   }, {});
 
   const resetForm = () => {
-    setForm({ title: "", url: "", description: "", category: "", sortOrder: 0 });
+    setForm({ title: "", url: "", description: "", category: "" });
     setEditingId(null);
     setShowForm(false);
     setError("");
@@ -60,7 +39,6 @@ export function LinksPage() {
       url: link.url,
       description: link.description ?? "",
       category: link.category,
-      sortOrder: link.sortOrder,
     });
     setEditingId(link.id);
     setShowForm(true);
@@ -73,13 +51,11 @@ export function LinksPage() {
     setError("");
     try {
       if (editingId) {
-        await api(`/links/${editingId}`, { method: "PUT", body: form });
+        await updateMutation.mutateAsync({ id: editingId, ...form });
       } else {
-        await api("/links", { method: "POST", body: form });
+        await createMutation.mutateAsync(form);
       }
       resetForm();
-      loadLinks();
-      loadCategories();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "保存に失敗しました");
     }
@@ -88,9 +64,7 @@ export function LinksPage() {
   const handleDelete = async (link: InternalLink) => {
     if (!confirm(`「${link.title}」を削除しますか？`)) return;
     try {
-      await api(`/links/${link.id}`, { method: "DELETE" });
-      loadLinks();
-      loadCategories();
+      await deleteMutation.mutateAsync(link.id);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "削除に失敗しました");
     }
@@ -157,16 +131,6 @@ export function LinksPage() {
                 ))}
               </datalist>
             </div>
-            <div>
-              <label className="label" htmlFor="link-sort-order">表示順</label>
-              <input
-                id="link-sort-order"
-                className="input"
-                type="number"
-                value={form.sortOrder}
-                onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })}
-              />
-            </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <label className="label" htmlFor="link-description">説明</label>
               <input
@@ -207,7 +171,9 @@ export function LinksPage() {
         ))}
       </div>
 
-      {Object.entries(groupedLinks).map(([cat, items], groupIdx) => (
+      {isLoading && <div className="empty-state">読み込み中...</div>}
+
+      {!isLoading && Object.entries(groupedLinks).map(([cat, items], groupIdx) => (
         <div key={cat} className="mb-6">
           <h2 className="section-title">{cat}</h2>
           <div className="grid-auto">
@@ -260,7 +226,7 @@ export function LinksPage() {
         </div>
       ))}
 
-      {links.length === 0 && (
+      {!isLoading && links.length === 0 && (
         <div className="empty-state">リンクはありません</div>
       )}
     </div>

@@ -1,58 +1,41 @@
-import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useEmployees, useEmployeeCreate, useEmployeeUpdate, useEmployeeDelete } from "../hooks/useEmployees";
+import type { Employee } from "../types/employee";
 
-interface Employee {
-  id: string;
-  name: string;
-  email: string;
-  department: string;
-  position: string;
-  phone?: string;
-  joinDate: string;
-  joinedAt?: string;
-}
-
-const emptyForm = { name: "", email: "", department: "", position: "", phone: "", joinedAt: "" };
+const emptyForm = { name: "", email: "", department: "", position: "", phone: "" };
 
 export function EmployeesPage() {
   const { isAdmin } = useAuth();
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState("");
-  const [departments, setDepartments] = useState<string[]>([]);
   const [form, setForm] = useState(emptyForm);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState("");
 
-  const loadEmployees = () => {
-    const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    if (department) params.set("department", department);
-    api<{ data: Employee[] }>(`/employees?${params.toString()}`).then((res) => {
-      setEmployees(res.data);
-      if (!departments.length) {
-        const depts = [...new Set(res.data.map((e) => e.department))].sort();
-        setDepartments(depts);
-      }
-    });
-  };
+  const { data: employees = [], isLoading } = useEmployees({ search: search || undefined, department: department || undefined });
 
-  useEffect(() => {
-    loadEmployees();
-  }, [search, department]);
+  const departments = [...new Set(employees.map((e) => e.department))].sort();
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const createMutation = useEmployeeCreate();
+  const updateMutation = useEmployeeUpdate();
+  const deleteMutation = useEmployeeDelete();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     try {
-      await api("/employees", { method: "POST", body: form });
+      if (editingId !== null) {
+        await updateMutation.mutateAsync({ id: editingId, ...form });
+      } else {
+        await createMutation.mutateAsync(form);
+      }
       setForm(emptyForm);
       setShowForm(false);
-      loadEmployees();
+      setEditingId(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "作成に失敗しました");
+      setError(err instanceof Error ? err.message : editingId ? "更新に失敗しました" : "作成に失敗しました");
     }
   };
 
@@ -64,31 +47,15 @@ export function EmployeesPage() {
       department: emp.department,
       position: emp.position,
       phone: emp.phone || "",
-      joinedAt: emp.joinedAt || emp.joinDate || "",
     });
     setShowForm(false);
     setError("");
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingId) return;
-    setError("");
-    try {
-      await api(`/employees/${editingId}`, { method: "PUT", body: form });
-      setForm(emptyForm);
-      setEditingId(null);
-      loadEmployees();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "更新に失敗しました");
-    }
-  };
-
   const handleDelete = async (emp: Employee) => {
     if (!confirm(`${emp.name} を削除しますか？`)) return;
     try {
-      await api(`/employees/${emp.id}`, { method: "DELETE" });
-      loadEmployees();
+      await deleteMutation.mutateAsync(emp.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : "削除に失敗しました");
     }
@@ -131,7 +98,7 @@ export function EmployeesPage() {
         <div className="form-panel animate-in">
           <h3>{formTitle}</h3>
           {error && <div className="alert alert-error">{error}</div>}
-          <form onSubmit={editingId ? handleUpdate : handleCreate}>
+          <form onSubmit={handleSubmit}>
             <div className="form-grid">
               <div>
                 <label className="label" htmlFor="emp-name">名前</label>
@@ -183,16 +150,6 @@ export function EmployeesPage() {
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="label" htmlFor="emp-joined-at">入社日</label>
-                <input
-                  id="emp-joined-at"
-                  className="input"
-                  type="date"
-                  value={form.joinedAt}
-                  onChange={(e) => setForm({ ...form, joinedAt: e.target.value })}
-                />
-              </div>
             </div>
             <div className="form-actions">
               <button type="submit" className="btn btn-primary">
@@ -227,7 +184,9 @@ export function EmployeesPage() {
         </select>
       </div>
 
-      {employees.length === 0 ? (
+      {isLoading ? (
+        <div className="empty-state animate-in stagger-2">読み込み中...</div>
+      ) : employees.length === 0 ? (
         <div className="empty-state animate-in stagger-2">社員が見つかりません</div>
       ) : (
         <div className="table-wrap animate-in stagger-2">

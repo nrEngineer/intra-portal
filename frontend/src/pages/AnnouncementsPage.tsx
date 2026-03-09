@@ -1,48 +1,33 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { api } from "../lib/api";
+import { useAnnouncements, useAnnouncementCreate, useAnnouncementDelete } from "../hooks/useAnnouncements";
+import { apiClient } from "../lib/api/client";
 import { useAuth } from "../hooks/useAuth";
-
-interface Announcement {
-  id: string;
-  title: string;
-  category: string;
-  createdAt: string;
-  isPinned: boolean;
-}
+import { useQueryClient } from "@tanstack/react-query";
+import { announcementKeys } from "../hooks/useAnnouncements";
 
 const CATEGORIES = ["全社", "総務", "IT", "人事", "イベント"];
 
 export function AnnouncementsPage() {
   const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [total, setTotal] = useState(0);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
   const page = Number(searchParams.get("page") || "1");
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", body: "", category: "全社", status: "published", pinned: false });
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  const loadAnnouncements = () => {
-    const params = new URLSearchParams();
-    params.set("page", String(page));
-    if (search) params.set("search", search);
-    if (category) params.set("category", category);
-    api<{ data: Announcement[]; total: number }>(`/announcements?${params.toString()}`).then((res) => {
-      setAnnouncements(res.data);
-      setTotal(res.total);
-    });
-  };
+  const { data, isLoading } = useAnnouncements({ page, search: search || undefined, category: category || undefined });
+  const announcements = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? Math.ceil(total / 10);
 
-  useEffect(() => {
-    loadAnnouncements();
-  }, [page, search, category]);
-
-  const totalPages = Math.ceil(total / 10);
+  const createMutation = useAnnouncementCreate();
+  const deleteMutation = useAnnouncementDelete();
 
   const updateParams = (updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams);
@@ -60,12 +45,12 @@ export function AnnouncementsPage() {
     setShowForm(true);
   };
 
-  const startEdit = async (a: Announcement, e: React.MouseEvent) => {
+  const startEdit = async (a: { id: number; title: string; category: string; createdAt: string; isPinned: boolean }, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      const detail = await api<{ title: string; body: string; category: string; status: string; isPinned: boolean }>(`/announcements/${a.id}`);
-      setForm({ title: detail.title, body: detail.body, category: detail.category, status: detail.status || "published", pinned: detail.isPinned });
+      const detail = await apiClient.get<{ title: string; content: string; category: string; status: string; isPinned: boolean }>(`/announcements/${a.id}`);
+      setForm({ title: detail.title, body: detail.content, category: detail.category, status: detail.status || "published", pinned: detail.isPinned });
       setEditingId(a.id);
       setError("");
       setShowForm(true);
@@ -74,13 +59,12 @@ export function AnnouncementsPage() {
     }
   };
 
-  const handleDelete = async (a: Announcement, e: React.MouseEvent) => {
+  const handleDelete = async (a: { id: number; title: string }, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!confirm(`「${a.title}」を削除しますか？`)) return;
     try {
-      await api(`/announcements/${a.id}`, { method: "DELETE" });
-      loadAnnouncements();
+      await deleteMutation.mutateAsync(a.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : "削除に失敗しました");
     }
@@ -92,20 +76,21 @@ export function AnnouncementsPage() {
     try {
       const body = {
         title: form.title,
-        body: form.body,
+        content: form.body,
         category: form.category,
         status: form.status,
-        pinned: form.pinned,
+        isPinned: form.pinned,
       };
-      if (editingId) {
-        await api(`/announcements/${editingId}`, { method: "PUT", body });
+      if (editingId !== null) {
+        await apiClient.put(`/announcements/${editingId}`, body);
+        queryClient.invalidateQueries({ queryKey: announcementKeys.lists() });
+        queryClient.invalidateQueries({ queryKey: announcementKeys.detail(editingId) });
       } else {
-        await api("/announcements", { method: "POST", body });
+        await createMutation.mutateAsync(body);
       }
       setShowForm(false);
       setEditingId(null);
       setForm({ title: "", body: "", category: "全社", status: "published", pinned: false });
-      loadAnnouncements();
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存に失敗しました");
     }
@@ -234,7 +219,9 @@ export function AnnouncementsPage() {
         </button>
       </div>
 
-      {announcements.length === 0 ? (
+      {isLoading ? (
+        <div className="empty-state animate-in stagger-3">読み込み中...</div>
+      ) : announcements.length === 0 ? (
         <div className="empty-state animate-in stagger-3">お知らせはありません</div>
       ) : (
         <div className="card animate-in stagger-3">

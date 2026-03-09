@@ -1,4 +1,25 @@
 import { vi } from "vitest";
+import { type ReactNode, createElement } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
+
+export function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+}
+
+export function TestWrapper({ children }: { children: ReactNode }) {
+  const queryClient = createTestQueryClient();
+  return createElement(
+    QueryClientProvider,
+    { client: queryClient },
+    createElement(BrowserRouter, null, children),
+  );
+}
 
 // Mock fetch globally
 export function mockFetch(responses: Record<string, unknown>) {

@@ -1,14 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { LinksPage } from "../pages/LinksPage";
-import { setupLocalStorage, clearLocalStorage } from "../test/mocks";
+import { setupLocalStorage, clearLocalStorage, TestWrapper } from "../test/mocks";
 
 function renderLinks() {
   return render(
-    <BrowserRouter>
+    <TestWrapper>
       <LinksPage />
-    </BrowserRouter>
+    </TestWrapper>
   );
 }
 

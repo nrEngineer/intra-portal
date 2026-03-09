@@ -1,57 +1,23 @@
 import { Hono } from "hono";
-import { eq, like, or, sql } from "drizzle-orm";
-import { getDb } from "./db/connection.js";
-import * as schema from "./db/schema.js";
 import { authMiddleware, adminOnly } from "./middleware.js";
-import type { User } from "./types.js";
-import { randomUUID } from "crypto";
+import type { HonoEnv } from "./types.js";
+import { EmployeeService } from "./services/employee.service.js";
 
-type Env = { Variables: { user: User } };
-const employees = new Hono<Env>();
+const employees = new Hono<HonoEnv>();
 employees.use("/*", authMiddleware);
 
 employees.get("/", async (c) => {
-  const db = getDb();
-  const search = c.req.query("search");
-  const department = c.req.query("department");
-
-  let data;
-  if (search) {
-    const q = `%${search.toLowerCase()}%`;
-    data = await db
-      .select()
-      .from(schema.employees)
-      .where(
-        or(
-          like(sql`lower(${schema.employees.name})`, q),
-          like(sql`lower(${schema.employees.department})`, q),
-          like(sql`lower(${schema.employees.position})`, q),
-        ),
-      );
-  } else {
-    data = await db.select().from(schema.employees);
-  }
-
-  if (department) {
-    data = data.filter((e) => e.department === department);
-  }
-
+  const data = await EmployeeService.list(c.req.query("search"), c.req.query("department"));
   return c.json({ data });
 });
 
 employees.get("/:id", async (c) => {
-  const db = getDb();
-  const emp = await db
-    .select()
-    .from(schema.employees)
-    .where(eq(schema.employees.id, c.req.param("id")))
-    .then((r) => r[0]);
+  const emp = await EmployeeService.getById(c.req.param("id"));
   if (!emp) return c.json({ error: "Not found" }, 404);
   return c.json(emp);
 });
 
 employees.post("/", adminOnly, async (c) => {
-  const db = getDb();
   const { userId, name, email, department, position, photoUrl, phone, joinedAt } = await c.req.json<{
     userId: string;
     name: string;
@@ -62,28 +28,11 @@ employees.post("/", adminOnly, async (c) => {
     phone?: string;
     joinedAt: string;
   }>();
-  const now = new Date().toISOString();
-  const [emp] = await db
-    .insert(schema.employees)
-    .values({
-      id: randomUUID(),
-      userId,
-      name,
-      email,
-      department,
-      position,
-      photoUrl: photoUrl || null,
-      phone: phone || "",
-      joinedAt,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning();
+  const emp = await EmployeeService.create({ userId, name, email, department, position, photoUrl, phone, joinedAt });
   return c.json(emp, 201);
 });
 
 employees.put("/:id", adminOnly, async (c) => {
-  const db = getDb();
   const { name, email, department, position, phone, photoUrl, joinedAt } = await c.req.json<{
     name: string;
     email: string;
@@ -93,21 +42,14 @@ employees.put("/:id", adminOnly, async (c) => {
     photoUrl?: string;
     joinedAt: string;
   }>();
-  const [emp] = await db
-    .update(schema.employees)
-    .set({ name, email, department, position, phone, photoUrl, joinedAt, updatedAt: new Date().toISOString() })
-    .where(eq(schema.employees.id, c.req.param("id")))
-    .returning();
+  const emp = await EmployeeService.update(c.req.param("id"), { name, email, department, position, phone, photoUrl, joinedAt });
   if (!emp) return c.json({ error: "Not found" }, 404);
   return c.json(emp);
 });
 
 employees.delete("/:id", adminOnly, async (c) => {
-  const { id } = c.req.param();
-  const db = getDb();
-  const emp = await db.select().from(schema.employees).where(eq(schema.employees.id, id)).then(r => r[0]);
-  if (!emp) return c.json({ error: "Not found" }, 404);
-  await db.delete(schema.employees).where(eq(schema.employees.id, id));
+  const deleted = await EmployeeService.delete(c.req.param("id"));
+  if (!deleted) return c.json({ error: "Not found" }, 404);
   return c.body(null, 204);
 });
 

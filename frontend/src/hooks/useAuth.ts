@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { api } from "../lib/api";
+import { apiClient } from "../lib/api/client";
 
 interface User {
   id: string;
@@ -27,10 +27,10 @@ export function useAuthState(): AuthContextValue {
   const [user, setUser] = useState<User | null>(loadUserFromStorage);
 
   const login = useCallback(async (email: string, password: string) => {
-    const data = await api<{ accessToken: string; refreshToken: string; user: User }>("/auth/login", {
-      method: "POST",
-      body: { email, password },
-    });
+    const data = await apiClient.post<{ accessToken: string; refreshToken: string; user: User }>(
+      "/auth/login",
+      { email, password },
+    );
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("refreshToken", data.refreshToken);
     localStorage.setItem("userId", data.user.id);
@@ -43,7 +43,7 @@ export function useAuthState(): AuthContextValue {
   const logout = useCallback(async () => {
     const refreshToken = localStorage.getItem("refreshToken");
     if (refreshToken) {
-      await api("/auth/logout", { method: "POST", body: { refreshToken } }).catch(() => {});
+      await apiClient.post("/auth/logout", { refreshToken }).catch(() => {});
     }
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");

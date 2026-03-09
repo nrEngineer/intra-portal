@@ -1,53 +1,43 @@
-import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-
-interface Folder {
-  id: string;
-  name: string;
-  parentId: string | null;
-}
-
-interface Document {
-  id: string;
-  title: string;
-  filename: string;
-  fileUrl: string;
-  folderId: string | null;
-  currentVersion: number;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-}
+import {
+  useFolders,
+  useDocuments,
+  useFolderCreate,
+  useFolderUpdate,
+  useFolderDelete,
+  useDocumentCreate,
+  useDocumentUpdate,
+  useDocumentDelete,
+} from "../hooks/useDocuments";
+import type { Folder, Document } from "../types/document";
 
 export function DocumentsPage() {
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "editor";
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+  const [currentFolder, setCurrentFolder] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [folderPath, setFolderPath] = useState<Folder[]>([]);
 
   const [showFolderInput, setShowFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [showDocForm, setShowDocForm] = useState(false);
-  const [docForm, setDocForm] = useState({ title: "", fileUrl: "", fileName: "", fileSize: 0 });
-  const [editingDocId, setEditingDocId] = useState<string | null>(null);
+  const [docForm, setDocForm] = useState({ title: "", content: "" });
+  const [editingDocId, setEditingDocId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  const loadData = () => {
-    const params = new URLSearchParams();
-    if (currentFolder) params.set("folderId", currentFolder);
-    if (search) params.set("search", search);
+  const { data: folders = [] } = useFolders(currentFolder);
+  const { data: documents = [], isLoading } = useDocuments({
+    folderId: currentFolder ?? undefined,
+    search: search || undefined,
+  });
 
-    api<{ data: Folder[] }>(`/documents/folders?parentId=${currentFolder || ""}`).then((res) => setFolders(res.data));
-    api<{ data: Document[] }>(`/documents?${params.toString()}`).then((res) => setDocuments(res.data));
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [currentFolder, search]);
+  const createFolder = useFolderCreate();
+  const updateFolder = useFolderUpdate();
+  const deleteFolder = useFolderDelete();
+  const createDoc = useDocumentCreate();
+  const updateDoc = useDocumentUpdate();
+  const deleteDoc = useDocumentDelete();
 
   const navigateToFolder = (folder: Folder | null) => {
     if (folder) {
@@ -70,97 +60,108 @@ export function DocumentsPage() {
   };
 
   // Folder handlers
-  const handleCreateFolder = async () => {
+  const handleCreateFolder = () => {
     if (!newFolderName.trim()) return;
-    try {
-      await api("/documents/folders", { method: "POST", body: { name: newFolderName, parentId: currentFolder } });
-      setNewFolderName("");
-      setShowFolderInput(false);
-      setError("");
-      loadData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "フォルダの作成に失敗しました");
-    }
+    createFolder.mutate(
+      { name: newFolderName, parentId: currentFolder ?? undefined },
+      {
+        onSuccess: () => {
+          setNewFolderName("");
+          setShowFolderInput(false);
+          setError("");
+        },
+        onError: (err) => {
+          setError(err instanceof Error ? err.message : "フォルダの作成に失敗しました");
+        },
+      }
+    );
   };
 
-  const handleRenameFolder = async (f: Folder) => {
+  const handleRenameFolder = (f: Folder) => {
     const name = prompt("新しいフォルダ名", f.name);
     if (!name || name === f.name) return;
-    try {
-      await api(`/documents/folders/${f.id}`, { method: "PUT", body: { name } });
-      setError("");
-      loadData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "名前変更に失敗しました");
-    }
+    updateFolder.mutate(
+      { id: f.id, name },
+      {
+        onSuccess: () => {
+          setError("");
+        },
+        onError: (err) => {
+          setError(err instanceof Error ? err.message : "名前変更に失敗しました");
+        },
+      }
+    );
   };
 
-  const handleDeleteFolder = async (f: Folder) => {
+  const handleDeleteFolder = (f: Folder) => {
     if (!confirm(`フォルダ「${f.name}」を削除しますか？`)) return;
-    try {
-      await api(`/documents/folders/${f.id}`, { method: "DELETE" });
-      setError("");
-      loadData();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "削除に失敗しました");
-    }
+    deleteFolder.mutate(f.id, {
+      onSuccess: () => {
+        setError("");
+      },
+      onError: (err) => {
+        alert(err instanceof Error ? err.message : "削除に失敗しました");
+      },
+    });
   };
 
   // Document handlers
-  const handleCreateDoc = async () => {
+  const handleDocSubmit = () => {
     if (!docForm.title.trim()) return;
-    try {
-      await api("/documents", {
-        method: "POST",
-        body: { title: docForm.title, fileUrl: docForm.fileUrl, fileName: docForm.fileName, fileSize: docForm.fileSize, folderId: currentFolder },
-      });
-      setDocForm({ title: "", fileUrl: "", fileName: "", fileSize: 0 });
-      setShowDocForm(false);
-      setError("");
-      loadData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "ドキュメントの作成に失敗しました");
+    if (editingDocId) {
+      updateDoc.mutate(
+        { id: editingDocId, title: docForm.title, content: docForm.content },
+        {
+          onSuccess: () => {
+            setDocForm({ title: "", content: "" });
+            setEditingDocId(null);
+            setShowDocForm(false);
+            setError("");
+          },
+          onError: (err) => {
+            setError(err instanceof Error ? err.message : "ドキュメントの更新に失敗しました");
+          },
+        }
+      );
+    } else {
+      createDoc.mutate(
+        { title: docForm.title, content: docForm.content, folderId: currentFolder ?? undefined },
+        {
+          onSuccess: () => {
+            setDocForm({ title: "", content: "" });
+            setShowDocForm(false);
+            setError("");
+          },
+          onError: (err) => {
+            setError(err instanceof Error ? err.message : "ドキュメントの作成に失敗しました");
+          },
+        }
+      );
     }
   };
 
   const startEditDoc = (doc: Document) => {
     setEditingDocId(doc.id);
-    setDocForm({ title: doc.title, fileUrl: doc.fileUrl, fileName: doc.filename, fileSize: 0 });
+    setDocForm({ title: doc.title, content: doc.content });
     setShowDocForm(true);
   };
 
-  const handleEditDoc = async () => {
-    if (!editingDocId || !docForm.title.trim()) return;
-    try {
-      await api(`/documents/${editingDocId}`, {
-        method: "PUT",
-        body: { title: docForm.title, fileUrl: docForm.fileUrl, fileName: docForm.fileName, fileSize: docForm.fileSize },
-      });
-      setDocForm({ title: "", fileUrl: "", fileName: "", fileSize: 0 });
-      setEditingDocId(null);
-      setShowDocForm(false);
-      setError("");
-      loadData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "ドキュメントの更新に失敗しました");
-    }
-  };
-
-  const handleDeleteDoc = async (doc: Document) => {
+  const handleDeleteDoc = (doc: Document) => {
     if (!confirm(`ドキュメント「${doc.title}」を削除しますか？`)) return;
-    try {
-      await api(`/documents/${doc.id}`, { method: "DELETE" });
-      setError("");
-      loadData();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "削除に失敗しました");
-    }
+    deleteDoc.mutate(doc.id, {
+      onSuccess: () => {
+        setError("");
+      },
+      onError: (err) => {
+        alert(err instanceof Error ? err.message : "削除に失敗しました");
+      },
+    });
   };
 
   const cancelDocForm = () => {
     setShowDocForm(false);
     setEditingDocId(null);
-    setDocForm({ title: "", fileUrl: "", fileName: "", fileSize: 0 });
+    setDocForm({ title: "", content: "" });
   };
 
   return (
@@ -197,7 +198,7 @@ export function DocumentsPage() {
             onClick={() => {
               setShowDocForm((v) => !v);
               setEditingDocId(null);
-              setDocForm({ title: "", fileUrl: "", fileName: "", fileSize: 0 });
+              setDocForm({ title: "", content: "" });
             }}
           >
             新規ドキュメント
@@ -238,41 +239,19 @@ export function DocumentsPage() {
               />
             </div>
             <div>
-              <label className="label" htmlFor="doc-file-url">ファイルURL</label>
-              <input
-                id="doc-file-url"
+              <label className="label" htmlFor="doc-content">内容</label>
+              <textarea
+                id="doc-content"
                 className="input"
-                type="text"
-                placeholder="ファイルURL（例: https://storage.example.com/file.pdf）"
-                value={docForm.fileUrl}
-                onChange={(e) => setDocForm((f) => ({ ...f, fileUrl: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="label" htmlFor="doc-file-name">ファイル名</label>
-              <input
-                id="doc-file-name"
-                className="input"
-                type="text"
-                placeholder="ファイル名（例: document.pdf）"
-                value={docForm.fileName}
-                onChange={(e) => setDocForm((f) => ({ ...f, fileName: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="label" htmlFor="doc-file-size">ファイルサイズ（バイト）</label>
-              <input
-                id="doc-file-size"
-                className="input"
-                type="number"
-                placeholder="ファイルサイズ（バイト）"
-                value={docForm.fileSize || ""}
-                onChange={(e) => setDocForm((f) => ({ ...f, fileSize: Number(e.target.value) }))}
+                placeholder="ドキュメントの内容"
+                value={docForm.content}
+                onChange={(e) => setDocForm((f) => ({ ...f, content: e.target.value }))}
+                rows={6}
               />
             </div>
           </div>
           <div className="form-actions">
-            <button className="btn btn-primary" onClick={editingDocId ? handleEditDoc : handleCreateDoc}>
+            <button className="btn btn-primary" onClick={handleDocSubmit}>
               {editingDocId ? "更新" : "作成"}
             </button>
             <button className="btn btn-ghost" onClick={cancelDocForm}>キャンセル</button>
@@ -295,7 +274,9 @@ export function DocumentsPage() {
       </div>
 
       <div className="card">
-        {folders.length === 0 && documents.length === 0 && (
+        {isLoading && <div className="empty-state">読み込み中...</div>}
+
+        {!isLoading && folders.length === 0 && documents.length === 0 && (
           <div className="empty-state">アイテムはありません</div>
         )}
 
@@ -330,18 +311,10 @@ export function DocumentsPage() {
             <div className="flex-1">
               <div style={{ fontWeight: 500 }}>{doc.title}</div>
               <div className="text-xs text-muted">
-                {doc.filename} | v{doc.currentVersion} | {new Date(doc.updatedAt).toLocaleDateString("ja-JP")}
+                v{doc.currentVersion} | {new Date(doc.updatedAt).toLocaleDateString("ja-JP")}
               </div>
             </div>
             <div className="flex gap-2 items-center">
-              <a
-                href={doc.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-sm btn-ghost"
-              >
-                ダウンロード
-              </a>
               {canEdit && (
                 <>
                   <button className="btn btn-sm btn-warn" onClick={() => startEditDoc(doc)}>編集</button>

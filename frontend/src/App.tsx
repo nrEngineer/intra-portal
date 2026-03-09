@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { AuthProvider } from "./providers/AuthProvider";
+import { QueryProvider } from "./providers/QueryProvider";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -26,6 +27,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <QueryProvider>
     <AuthProvider>
     <BrowserRouter>
       <Routes>
@@ -56,5 +58,6 @@ export default function App() {
       </Routes>
     </BrowserRouter>
     </AuthProvider>
+    </QueryProvider>
   );
 }

@@ -2,6 +2,11 @@ export type Category = "全社" | "部署" | "IT" | "総務" | "その他";
 export type AnnouncementStatus = "draft" | "published";
 export type UserRole = "admin" | "editor" | "member";
 
+export const VALID_ROLES: UserRole[] = ["admin", "editor", "member"];
+
+/** Shared Hono environment type — use this instead of per-file `type Env` */
+export type HonoEnv = { Variables: { user: User } };
+
 export interface User {
   id: string;
   name: string;

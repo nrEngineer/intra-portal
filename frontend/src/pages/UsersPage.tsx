@@ -1,13 +1,6 @@
-import { useEffect, useState } from "react";
-import { api } from "../lib/api";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  createdAt: string;
-}
+import { useState } from "react";
+import { useUsers, useUserCreate, useUserRoleChange, useUserDelete } from "../hooks/useUsers";
+import type { User, UserRole } from "../types/user";
 
 const roleLabelMap: Record<string, string> = {
   admin: "管理者",
@@ -22,49 +15,34 @@ const roleBadgeClass: Record<string, string> = {
 };
 
 export function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const { data: users = [], isLoading } = useUsers();
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ email: "", name: "", password: "", role: "member" });
+  const [form, setForm] = useState({ email: "", name: "", password: "", role: "member" as UserRole });
   const [error, setError] = useState("");
 
-  const loadUsers = () => {
-    api<{ data: User[] }>("/users").then((res) => setUsers(res.data));
-  };
-
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  const createMutation = useUserCreate();
+  const roleChangeMutation = useUserRoleChange();
+  const deleteMutation = useUserDelete();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     try {
-      await api("/users", { method: "POST", body: form });
+      await createMutation.mutateAsync(form);
       setForm({ email: "", name: "", password: "", role: "member" });
       setShowCreate(false);
-      loadUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : "作成に失敗しました");
     }
   };
 
-  const handleRoleChange = async (userId: string, role: string) => {
-    try {
-      await api(`/users/${userId}/role`, { method: "PUT", body: { role } });
-      loadUsers();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "変更に失敗しました");
-    }
+  const handleRoleChange = (userId: number, role: string) => {
+    roleChangeMutation.mutate({ id: userId, role: role as UserRole });
   };
 
-  const handleDelete = async (u: User) => {
+  const handleDelete = (u: User) => {
     if (!confirm(`${u.name} を削除しますか？`)) return;
-    try {
-      await api(`/users/${u.id}`, { method: "DELETE" });
-      loadUsers();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "削除に失敗しました");
-    }
+    deleteMutation.mutate(u.id);
   };
 
   return (
@@ -126,7 +104,7 @@ export function UsersPage() {
                   id="user-role"
                   className="select"
                   value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
                 >
                   <option value="member">メンバー</option>
                   <option value="editor">エディター</option>
@@ -149,51 +127,57 @@ export function UsersPage() {
       )}
 
       <div className="table-wrap animate-in stagger-1">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>名前</th>
-              <th>メール</th>
-              <th>ロール</th>
-              <th>作成日</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td>{u.name}</td>
-                <td>{u.email}</td>
-                <td>
-                  <div className="flex items-center gap-2">
-                    <span className={roleBadgeClass[u.role] ?? "badge badge-default"}>
-                      {roleLabelMap[u.role] ?? u.role}
-                    </span>
-                    <select
-                      className="select"
-                      style={{ width: "auto", padding: "var(--sp-1) var(--sp-3)", paddingRight: "var(--sp-8)" }}
-                      value={u.role}
-                      onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                    >
-                      <option value="member">メンバー</option>
-                      <option value="editor">エディター</option>
-                      <option value="admin">管理者</option>
-                    </select>
-                  </div>
-                </td>
-                <td>{new Date(u.createdAt).toLocaleDateString("ja-JP")}</td>
-                <td>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(u)}
-                  >
-                    削除
-                  </button>
-                </td>
+        {isLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <span>読み込み中...</span>
+          </div>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>名前</th>
+                <th>メール</th>
+                <th>ロール</th>
+                <th>作成日</th>
+                <th>操作</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.name}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <span className={roleBadgeClass[u.role] ?? "badge badge-default"}>
+                        {roleLabelMap[u.role] ?? u.role}
+                      </span>
+                      <select
+                        className="select"
+                        style={{ width: "auto", padding: "var(--sp-1) var(--sp-3)", paddingRight: "var(--sp-8)" }}
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                      >
+                        <option value="member">メンバー</option>
+                        <option value="editor">エディター</option>
+                        <option value="admin">管理者</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td>{new Date(u.createdAt).toLocaleDateString("ja-JP")}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDelete(u)}
+                    >
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

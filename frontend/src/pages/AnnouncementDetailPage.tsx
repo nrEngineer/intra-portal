@@ -1,30 +1,14 @@
-import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { api } from "../lib/api";
-
-interface AnnouncementDetail {
-  id: string;
-  title: string;
-  body: string;
-  category: string;
-  createdAt: string;
-  updatedAt: string;
-  author: string;
-  isPinned: boolean;
-  attachments: { filename: string; url: string; size: number }[];
-}
+import { useAnnouncement } from "../hooks/useAnnouncements";
 
 export function AnnouncementDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [announcement, setAnnouncement] = useState<AnnouncementDetail | null>(null);
-  const [error, setError] = useState("");
+  const announcementId = Number(id);
+  const { data: announcement, isLoading, error } = useAnnouncement(announcementId);
 
-  useEffect(() => {
-    if (!id) return;
-    api<AnnouncementDetail>(`/announcements/${id}`)
-      .then(setAnnouncement)
-      .catch((err) => setError(err.message));
-  }, [id]);
+  if (isLoading) {
+    return <p className="text-muted text-sm">読み込み中...</p>;
+  }
 
   if (error) {
     return (
@@ -34,7 +18,7 @@ export function AnnouncementDetailPage() {
             &larr; お知らせ一覧に戻る
           </Link>
         </div>
-        <div className="alert alert-error">{error}</div>
+        <div className="alert alert-error">{error.message}</div>
       </div>
     );
   }
@@ -71,7 +55,7 @@ export function AnnouncementDetailPage() {
         </h1>
 
         <div className="flex gap-4 text-xs text-muted mb-6">
-          <span>投稿者: {announcement.author}</span>
+          <span>投稿者: {announcement.authorName}</span>
           <span>作成: {new Date(announcement.createdAt).toLocaleDateString("ja-JP")}</span>
           {announcement.updatedAt !== announcement.createdAt && (
             <span>更新: {new Date(announcement.updatedAt).toLocaleDateString("ja-JP")}</span>
@@ -86,7 +70,7 @@ export function AnnouncementDetailPage() {
             color: "var(--c-text)",
           }}
         >
-          {announcement.body}
+          {announcement.content}
         </div>
 
         {announcement.attachments.length > 0 && (
@@ -122,14 +106,14 @@ export function AnnouncementDetailPage() {
                   <span className="file-icon doc">📄</span>
                   <div className="flex-1">
                     <a
-                      href={att.url}
+                      href={att.filePath}
                       className="text-sm"
                       style={{ color: "var(--c-info)", fontWeight: "var(--fw-medium)" }}
                     >
-                      {att.filename}
+                      {att.fileName}
                     </a>
                     <p className="text-xs text-muted" style={{ marginTop: "var(--sp-1)" }}>
-                      {(att.size / 1024).toFixed(1)} KB
+                      {(att.fileSize / 1024).toFixed(1)} KB
                     </p>
                   </div>
                 </li>

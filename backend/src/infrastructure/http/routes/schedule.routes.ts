@@ -1,0 +1,132 @@
+import { Hono } from "hono";
+import type { MiddlewareHandler } from "hono";
+import type { Container } from "../../../di/container.js";
+import { handleDomainError } from "../error-mapper.js";
+import { adminOnly } from "../middleware/auth.middleware.js";
+import type { HonoEnv } from "../middleware/auth.middleware.js";
+
+export function createScheduleRoutes(container: Container, authMiddleware: MiddlewareHandler) {
+  const app = new Hono<HonoEnv>();
+
+  app.use("/*", authMiddleware);
+
+  // Teams
+  app.get("/teams", async (c) => {
+    try {
+      const user = c.get("user");
+      const uow = container.createUnitOfWork();
+      const data = await container.listTeamsUseCase.execute(user.id, uow);
+      return c.json({ data });
+    } catch (error) {
+      return handleDomainError(c, error);
+    }
+  });
+
+  app.post("/teams", adminOnly, async (c) => {
+    try {
+      const { name, memberIds } = await c.req.json<{ name: string; memberIds: string[] }>();
+      const uow = container.createUnitOfWork();
+      const team = await container.createTeamUseCase.execute({ name, memberIds }, uow);
+      return c.json(team, 201);
+    } catch (error) {
+      return handleDomainError(c, error);
+    }
+  });
+
+  app.put("/teams/:id", adminOnly, async (c) => {
+    try {
+      const { name } = await c.req.json<{ name: string }>();
+      const uow = container.createUnitOfWork();
+      const team = await container.updateTeamUseCase.execute(c.req.param("id"), name, uow);
+      return c.json({ data: team });
+    } catch (error) {
+      return handleDomainError(c, error);
+    }
+  });
+
+  app.delete("/teams/:id", adminOnly, async (c) => {
+    try {
+      const uow = container.createUnitOfWork();
+      await container.deleteTeamUseCase.execute(c.req.param("id"), uow);
+      return c.body(null, 204);
+    } catch (error) {
+      return handleDomainError(c, error);
+    }
+  });
+
+  // Events
+  app.get("/events", async (c) => {
+    try {
+      const user = c.get("user");
+      const uow = container.createUnitOfWork();
+      const result = await container.listEventsUseCase.execute(
+        c.req.query("teamId"),
+        c.req.query("start"),
+        c.req.query("end"),
+        user,
+        uow,
+      );
+      return c.json(result);
+    } catch (error) {
+      return handleDomainError(c, error);
+    }
+  });
+
+  app.post("/events", async (c) => {
+    try {
+      const user = c.get("user");
+      const { title, description, startAt, endAt, teamId, allDay } = await c.req.json<{
+        title: string;
+        description?: string;
+        startAt: string;
+        endAt: string;
+        teamId: string;
+        allDay?: boolean;
+      }>();
+      const uow = container.createUnitOfWork();
+      const event = await container.createEventUseCase.execute(
+        { title, description, startAt, endAt, teamId, allDay, userId: user.id },
+        uow,
+      );
+      return c.json(event, 201);
+    } catch (error) {
+      return handleDomainError(c, error);
+    }
+  });
+
+  app.put("/events/:id", async (c) => {
+    try {
+      const user = c.get("user");
+      const { title, description, startAt, endAt, allDay } = await c.req.json<{
+        title: string;
+        description?: string;
+        startAt: string;
+        endAt: string;
+        allDay?: boolean;
+      }>();
+      const uow = container.createUnitOfWork();
+      const result = await container.updateEventUseCase.execute(
+        c.req.param("id"),
+        { title, description, startAt, endAt, allDay },
+        user,
+        uow,
+      );
+      return c.json(result);
+    } catch (error) {
+      return handleDomainError(c, error);
+    }
+  });
+
+  app.delete("/events/:id", async (c) => {
+    try {
+      const user = c.get("user");
+      const uow = container.createUnitOfWork();
+      await container.deleteEventUseCase.execute(c.req.param("id"), user, uow);
+      return c.json({ success: true });
+    } catch (error) {
+      return handleDomainError(c, error);
+    }
+  });
+
+  return app;
+}

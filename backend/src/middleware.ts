@@ -1,14 +1,8 @@
 import { createMiddleware } from "hono/factory";
 import { verifyAccessToken } from "./auth-utils.js";
-import type { User, UserRole } from "./types.js";
+import type { HonoEnv, UserRole } from "./types.js";
 
-type Env = {
-  Variables: {
-    user: User;
-  };
-};
-
-export const authMiddleware = createMiddleware<Env>(async (c, next) => {
+export const authMiddleware = createMiddleware<HonoEnv>(async (c, next) => {
   // Try JWT Bearer token first
   const authHeader = c.req.header("Authorization");
   if (authHeader?.startsWith("Bearer ")) {
@@ -37,7 +31,7 @@ export const authMiddleware = createMiddleware<Env>(async (c, next) => {
   return c.json({ error: "Unauthorized" }, 401);
 });
 
-export const adminOnly = createMiddleware<Env>(async (c, next) => {
+export const adminOnly = createMiddleware<HonoEnv>(async (c, next) => {
   const user = c.get("user");
   if (user.role !== "admin") {
     return c.json({ error: "Forbidden" }, 403);
@@ -45,7 +39,7 @@ export const adminOnly = createMiddleware<Env>(async (c, next) => {
   await next();
 });
 
-export const editorOrAdmin = createMiddleware<Env>(async (c, next) => {
+export const editorOrAdmin = createMiddleware<HonoEnv>(async (c, next) => {
   const user = c.get("user");
   if (user.role !== "admin" && user.role !== "editor") {
     return c.json({ error: "Forbidden" }, 403);

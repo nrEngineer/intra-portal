@@ -1,138 +1,55 @@
 import { Hono } from "hono";
-import { eq, like, or, sql, desc, isNull } from "drizzle-orm";
-import { getDb } from "./db/connection.js";
-import * as schema from "./db/schema.js";
 import { authMiddleware, editorOrAdmin, adminOnly } from "./middleware.js";
-import type { User } from "./types.js";
-import { randomUUID } from "crypto";
+import type { HonoEnv } from "./types.js";
+import { DocumentService } from "./services/document.service.js";
 
-type Env = { Variables: { user: User } };
-const docs = new Hono<Env>();
+const docs = new Hono<HonoEnv>();
 docs.use("/*", authMiddleware);
 
 // Folders
 docs.get("/folders", async (c) => {
-  const db = getDb();
-  const parentId = c.req.query("parentId") || null;
-
-  const data = parentId
-    ? await db.select().from(schema.folders).where(eq(schema.folders.parentId, parentId))
-    : await db.select().from(schema.folders).where(isNull(schema.folders.parentId));
-
+  const data = await DocumentService.listFolders(c.req.query("parentId") || null);
   return c.json({ data });
 });
 
 docs.post("/folders", editorOrAdmin, async (c) => {
-  const db = getDb();
   const user = c.get("user");
   const { name, parentId } = await c.req.json<{ name: string; parentId?: string }>();
-
-  const [folder] = await db
-    .insert(schema.folders)
-    .values({
-      id: randomUUID(),
-      name,
-      parentId: parentId || null,
-      createdBy: user.id,
-      createdAt: new Date().toISOString(),
-    })
-    .returning();
-
+  const folder = await DocumentService.createFolder(name, parentId || null, user.id);
   return c.json(folder, 201);
 });
 
-docs.put("/folders/:id", async (c) => {
-  const { id } = c.req.param();
+docs.put("/folders/:id", editorOrAdmin, async (c) => {
   const { name } = await c.req.json<{ name: string }>();
-  const db = getDb();
-  const folder = await db.select().from(schema.folders).where(eq(schema.folders.id, id)).then(r => r[0]);
+  const folder = await DocumentService.updateFolder(c.req.param("id"), name);
   if (!folder) return c.json({ error: "Not found" }, 404);
-  const [updated] = await db.update(schema.folders).set({ name }).where(eq(schema.folders.id, id)).returning();
-  return c.json({ data: updated });
+  return c.json({ data: folder });
 });
 
 docs.delete("/folders/:id", adminOnly, async (c) => {
-  const db = getDb();
-  const id = c.req.param("id");
-
-  // Check for children
-  const childFolders = await db
-    .select()
-    .from(schema.folders)
-    .where(eq(schema.folders.parentId, id));
-  const childDocs = await db
-    .select()
-    .from(schema.documents)
-    .where(eq(schema.documents.folderId, id));
-
-  if (childFolders.length > 0 || childDocs.length > 0) {
-    return c.json({ error: "フォルダが空でないか、見つかりません" }, 400);
-  }
-
-  const existing = await db
-    .select()
-    .from(schema.folders)
-    .where(eq(schema.folders.id, id))
-    .then((r) => r[0]);
-
-  if (!existing) {
-    return c.json({ error: "フォルダが空でないか、見つかりません" }, 400);
-  }
-
-  await db.delete(schema.folders).where(eq(schema.folders.id, id));
+  const result = await DocumentService.deleteFolder(c.req.param("id"));
+  if ("error" in result) return c.json({ error: result.error }, result.status);
   return c.json({ success: true });
 });
 
 // Documents
 docs.get("/", async (c) => {
-  const db = getDb();
-  const folderId = c.req.query("folderId");
-  const search = c.req.query("search");
-
-  if (search) {
-    const q = `%${search.toLowerCase()}%`;
-    const data = await db
-      .select()
-      .from(schema.documents)
-      .where(
-        or(
-          like(sql`lower(${schema.documents.title})`, q),
-          like(sql`lower(${schema.documents.fileName})`, q),
-        ),
-      );
-    return c.json({ data });
-  }
-
-  const data = folderId
-    ? await db.select().from(schema.documents).where(eq(schema.documents.folderId, folderId))
-    : await db.select().from(schema.documents).where(isNull(schema.documents.folderId));
-
+  const data = await DocumentService.listDocuments(c.req.query("folderId"), c.req.query("search"));
   return c.json({ data });
 });
 
 docs.get("/:id", async (c) => {
-  const db = getDb();
-  const doc = await db
-    .select()
-    .from(schema.documents)
-    .where(eq(schema.documents.id, c.req.param("id")))
-    .then((r) => r[0]);
+  const doc = await DocumentService.getDocument(c.req.param("id"));
   if (!doc) return c.json({ error: "Not found" }, 404);
   return c.json(doc);
 });
 
 docs.get("/:id/versions", async (c) => {
-  const db = getDb();
-  const data = await db
-    .select()
-    .from(schema.documentVersions)
-    .where(eq(schema.documentVersions.documentId, c.req.param("id")))
-    .orderBy(desc(schema.documentVersions.version));
+  const data = await DocumentService.getVersions(c.req.param("id"));
   return c.json({ data });
 });
 
 docs.post("/", editorOrAdmin, async (c) => {
-  const db = getDb();
   const user = c.get("user");
   const { title, folderId, fileUrl, fileName, fileSize } = await c.req.json<{
     title: string;
@@ -141,105 +58,26 @@ docs.post("/", editorOrAdmin, async (c) => {
     fileName: string;
     fileSize: number;
   }>();
-  const now = new Date().toISOString();
-  const docId = randomUUID();
-
-  const [doc] = await db
-    .insert(schema.documents)
-    .values({
-      id: docId,
-      title,
-      folderId: folderId || null,
-      fileUrl,
-      fileName,
-      fileSize,
-      version: 1,
-      createdBy: user.id,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning();
-
-  await db.insert(schema.documentVersions).values({
-    id: randomUUID(),
-    documentId: docId,
-    version: 1,
-    fileUrl,
-    fileName,
-    fileSize,
-    createdBy: user.id,
-    createdAt: now,
-  });
-
+  const doc = await DocumentService.createDocument({ title, folderId, fileUrl, fileName, fileSize }, user.id);
   return c.json(doc, 201);
 });
 
 docs.put("/:id", editorOrAdmin, async (c) => {
-  const db = getDb();
   const user = c.get("user");
-  const id = c.req.param("id");
-  const { title, body: docBody, fileUrl, fileName, fileSize } = await c.req.json<{
+  const { title, fileUrl, fileName, fileSize } = await c.req.json<{
     title: string;
-    body?: string;
     fileUrl?: string;
     fileName?: string;
     fileSize?: number;
   }>();
-  const now = new Date().toISOString();
-
-  const existing = await db
-    .select()
-    .from(schema.documents)
-    .where(eq(schema.documents.id, id))
-    .then((r) => r[0]);
-
-  if (!existing) return c.json({ error: "Not found" }, 404);
-
-  const isNewFile = fileUrl && fileUrl !== existing.fileUrl;
-  const newVersion = isNewFile ? existing.version + 1 : existing.version;
-
-  if (isNewFile) {
-    await db.insert(schema.documentVersions).values({
-      id: randomUUID(),
-      documentId: id,
-      version: newVersion,
-      fileUrl,
-      fileName: fileName || existing.fileName,
-      fileSize: fileSize || existing.fileSize,
-      createdBy: user.id,
-      createdAt: now,
-    });
-  }
-
-  const [doc] = await db
-    .update(schema.documents)
-    .set({
-      title,
-      body: docBody,
-      fileUrl,
-      version: newVersion,
-      updatedAt: now,
-    })
-    .where(eq(schema.documents.id, id))
-    .returning();
-
+  const doc = await DocumentService.updateDocument(c.req.param("id"), { title, fileUrl, fileName, fileSize }, user.id);
+  if (!doc) return c.json({ error: "Not found" }, 404);
   return c.json(doc);
 });
 
 docs.delete("/:id", adminOnly, async (c) => {
-  const db = getDb();
-  const id = c.req.param("id");
-
-  const existing = await db
-    .select()
-    .from(schema.documents)
-    .where(eq(schema.documents.id, id))
-    .then((r) => r[0]);
-
-  if (!existing) return c.json({ error: "Not found" }, 404);
-
-  await db.delete(schema.documentVersions).where(eq(schema.documentVersions.documentId, id));
-  await db.delete(schema.documents).where(eq(schema.documents.id, id));
+  const deleted = await DocumentService.deleteDocument(c.req.param("id"));
+  if (!deleted) return c.json({ error: "Not found" }, 404);
   return c.json({ success: true });
 });
 

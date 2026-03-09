@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../lib/api";
+import { useApiQuery } from "../lib/api/use-api-query";
 import { useAuth } from "../hooks/useAuth";
 
 interface Announcement {
@@ -12,13 +11,20 @@ interface Announcement {
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    api<{ data: Announcement[] }>("/announcements?page=1").then((res) => setAnnouncements(res.data.slice(0, 5)));
-    api<{ count: number }>("/announcements/unread-count").then((res) => setUnreadCount(res.count));
-  }, []);
+  const { data: announcementsData } = useApiQuery<{ data: Announcement[]; total: number }>({
+    queryKey: ["dashboard", "announcements"],
+    url: "/announcements",
+    params: { page: 1 },
+  });
+
+  const { data: unreadData } = useApiQuery<{ count: number }>({
+    queryKey: ["announcements", "unread-count"],
+    url: "/announcements/unread-count",
+  });
+
+  const announcements = announcementsData?.data.slice(0, 5) ?? [];
+  const unreadCount = unreadData?.count ?? 0;
 
   const now = new Date();
   const hour = now.getHours();

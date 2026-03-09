@@ -1,15 +1,14 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { BrowserRouter } from "react-router-dom";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { UsersPage } from "../pages/UsersPage";
-import { setupLocalStorage, clearLocalStorage } from "../test/mocks";
+import { setupLocalStorage, clearLocalStorage, TestWrapper } from "../test/mocks";
 
 function renderUsers() {
   return render(
-    <BrowserRouter>
+    <TestWrapper>
       <UsersPage />
-    </BrowserRouter>
+    </TestWrapper>
   );
 }
 

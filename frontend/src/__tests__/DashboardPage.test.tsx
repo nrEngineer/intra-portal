@@ -1,14 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { DashboardPage } from "../pages/DashboardPage";
-import { setupLocalStorage, clearLocalStorage } from "../test/mocks";
+import { setupLocalStorage, clearLocalStorage, TestWrapper } from "../test/mocks";
 
 function renderDashboard() {
   return render(
-    <BrowserRouter>
+    <TestWrapper>
       <DashboardPage />
-    </BrowserRouter>
+    </TestWrapper>
   );
 }
 
