@@ -1,4 +1,4 @@
-import type { Context } from "hono";
+import type { Context, ErrorHandler } from "hono";
 import { ErrorCode, DomainError } from "../../domain/errors/domain-error.js";
 
 const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
@@ -9,6 +9,7 @@ const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
   [ErrorCode.INVALID_CREDENTIALS]: 401,
   [ErrorCode.ACCOUNT_LOCKED]: 423,
   [ErrorCode.INVALID_TOKEN]: 401,
+  [ErrorCode.EXPIRED_RESET_TOKEN]: 400,
   [ErrorCode.INVALID_PASSWORD]: 400,
   [ErrorCode.CANNOT_DELETE_SELF]: 400,
   [ErrorCode.INVALID_ROLE]: 400,
@@ -27,10 +28,11 @@ const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
   [ErrorCode.LINK_NOT_FOUND]: 404,
 };
 
-export function handleDomainError(c: Context, error: unknown) {
-  if (error instanceof DomainError) {
-    const status = ERROR_STATUS_MAP[error.errorCode] ?? 500;
-    return c.json({ error: error.message }, status as any);
+/** Global Hono error handler — maps DomainError to HTTP status */
+export const errorHandler: ErrorHandler = (err, c) => {
+  if (err instanceof DomainError) {
+    const status = ERROR_STATUS_MAP[err.errorCode] ?? 500;
+    return c.json({ error: err.message }, status as any);
   }
-  throw error; // Re-throw non-domain errors
-}
+  return c.json({ error: "Internal Server Error" }, 500);
+};

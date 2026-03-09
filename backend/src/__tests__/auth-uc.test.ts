@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { app } from "../app.js";
 import { setupTestDb, resetTestDb, seedTestAdmin } from "./test-helpers.js";
-import { getSentEmails } from "../auth-routes.js";
+import { container } from "../app.js";
+import type { InMemoryEmailService } from "../infrastructure/services/in-memory-email.service.js";
 import { getDb } from "../db/connection.js";
 import * as schema from "../db/schema.js";
 import { eq } from "drizzle-orm";
@@ -259,7 +260,7 @@ describe("UC-8: パスワードリセット要求", () => {
       body: { email: "admin@example.com" },
     });
     expect(res.status).toBe(200);
-    expect(getSentEmails().length).toBe(1);
+    expect((container.emailService as InMemoryEmailService).getSentEmails().length).toBe(1);
   });
 
   it("存在しないメール→成功レスポンス（情報漏洩防止）", async () => {
@@ -267,7 +268,7 @@ describe("UC-8: パスワードリセット要求", () => {
       body: { email: "nonexistent@example.com" },
     });
     expect(res.status).toBe(200);
-    expect(getSentEmails().length).toBe(0);
+    expect((container.emailService as InMemoryEmailService).getSentEmails().length).toBe(0);
   });
 });
 

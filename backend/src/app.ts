@@ -9,6 +9,7 @@ import { createScheduleRoutes } from "./infrastructure/http/routes/schedule.rout
 import { createLinkRoutes } from "./infrastructure/http/routes/link.routes.js";
 import { createDocumentRoutes } from "./infrastructure/http/routes/document.routes.js";
 import { createUploadRoutes } from "./infrastructure/http/routes/upload.routes.js";
+import { errorHandler } from "./infrastructure/http/error-mapper.js";
 
 export const container = createContainer();
 const authMiddleware = createAuthMiddleware(container.tokenService);
@@ -31,5 +32,7 @@ app.route("/api/schedule", createScheduleRoutes(container, authMiddleware));
 app.route("/api/links", createLinkRoutes(container, authMiddleware));
 app.route("/api/documents", createDocumentRoutes(container, authMiddleware));
 app.route("/api/uploads", createUploadRoutes(container, authMiddleware));
+
+app.onError(errorHandler);
 
 export { app };

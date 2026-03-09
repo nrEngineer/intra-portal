@@ -3,7 +3,8 @@ import { createTables, clearAllTables } from "../db/create-tables.js";
 import * as schema from "../db/schema.js";
 import bcryptjs from "bcryptjs";
 import type { AppDatabase } from "../db/connection.js";
-import { resetSentEmails } from "../auth-routes.js";
+import { container } from "../app.js";
+import type { InMemoryEmailService } from "../infrastructure/services/in-memory-email.service.js";
 
 let initialized = false;
 
@@ -19,7 +20,7 @@ export async function setupTestDb(): Promise<AppDatabase> {
 export async function resetTestDb(): Promise<void> {
   const db = getDb();
   await clearAllTables(db);
-  resetSentEmails();
+  (container.emailService as InMemoryEmailService).reset();
 }
 
 export async function seedTestAdmin(

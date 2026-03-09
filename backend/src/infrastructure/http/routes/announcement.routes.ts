@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
 import type { Container } from "../../../di/container.js";
-import { handleDomainError } from "../error-mapper.js";
 import { adminOnly } from "../middleware/auth.middleware.js";
 import type { HonoEnv } from "../middleware/auth.middleware.js";
 
@@ -12,35 +11,27 @@ export function createAnnouncementRoutes(container: Container, authMiddleware: M
 
   // UC-1: List announcements
   app.get("/", async (c) => {
-    try {
-      const user = c.get("user");
-      const uow = container.createUnitOfWork();
-      const result = await container.listAnnouncementsUseCase.execute(
-        {
-          user,
-          drafts: c.req.query("drafts"),
-          category: c.req.query("category"),
-          search: c.req.query("search"),
-          page: c.req.query("page"),
-        },
-        uow,
-      );
-      return c.json(result);
-    } catch (error) {
-      return handleDomainError(c, error);
-    }
+    const user = c.get("user");
+    const uow = container.createUnitOfWork();
+    const result = await container.listAnnouncementsUseCase.execute(
+      {
+        user,
+        drafts: c.req.query("drafts"),
+        category: c.req.query("category"),
+        search: c.req.query("search"),
+        page: c.req.query("page"),
+      },
+      uow,
+    );
+    return c.json(result);
   });
 
   // Unread count
   app.get("/unread-count", async (c) => {
-    try {
-      const user = c.get("user");
-      const uow = container.createUnitOfWork();
-      const result = await container.getUnreadCountUseCase.execute(user.id, uow);
-      return c.json(result);
-    } catch (error) {
-      return handleDomainError(c, error);
-    }
+    const user = c.get("user");
+    const uow = container.createUnitOfWork();
+    const result = await container.getUnreadCountUseCase.execute(user.id, uow);
+    return c.json(result);
   });
 
   // Upload validation
@@ -62,65 +53,49 @@ export function createAnnouncementRoutes(container: Container, authMiddleware: M
 
   // UC-2: Get announcement detail + mark as read
   app.get("/:id", async (c) => {
-    try {
-      const user = c.get("user");
-      const uow = container.createUnitOfWork();
-      const result = await container.getAnnouncementUseCase.execute(c.req.param("id"), user, uow);
-      return c.json(result);
-    } catch (error) {
-      return handleDomainError(c, error);
-    }
+    const user = c.get("user");
+    const uow = container.createUnitOfWork();
+    const result = await container.getAnnouncementUseCase.execute(c.req.param("id"), user, uow);
+    return c.json(result);
   });
 
   // UC-3: Create announcement
   app.post("/", adminOnly, async (c) => {
-    try {
-      const user = c.get("user");
-      const { title, body, category, status, pinned } = await c.req.json<{
-        title: string;
-        body: string;
-        category: string;
-        status: string;
-        pinned: boolean;
-      }>();
-      const uow = container.createUnitOfWork();
-      const result = await container.createAnnouncementUseCase.execute(
-        { title, body, category, status, pinned, userId: user.id },
-        uow,
-      );
-      return c.json(result, 201);
-    } catch (error) {
-      return handleDomainError(c, error);
-    }
+    const user = c.get("user");
+    const { title, body, category, status, pinned } = await c.req.json<{
+      title: string;
+      body: string;
+      category: string;
+      status: string;
+      pinned: boolean;
+    }>();
+    const uow = container.createUnitOfWork();
+    const result = await container.createAnnouncementUseCase.execute(
+      { title, body, category, status, pinned, userId: user.id },
+      uow,
+    );
+    return c.json(result, 201);
   });
 
   // UC-4: Update announcement
   app.put("/:id", adminOnly, async (c) => {
-    try {
-      const { title, body, category, status, pinned } = await c.req.json<
-        Partial<{ title: string; body: string; category: string; status: string; pinned: boolean }>
-      >();
-      const uow = container.createUnitOfWork();
-      const result = await container.updateAnnouncementUseCase.execute(
-        c.req.param("id"),
-        { title, body, category, status, pinned },
-        uow,
-      );
-      return c.json(result);
-    } catch (error) {
-      return handleDomainError(c, error);
-    }
+    const { title, body, category, status, pinned } = await c.req.json<
+      Partial<{ title: string; body: string; category: string; status: string; pinned: boolean }>
+    >();
+    const uow = container.createUnitOfWork();
+    const result = await container.updateAnnouncementUseCase.execute(
+      c.req.param("id"),
+      { title, body, category, status, pinned },
+      uow,
+    );
+    return c.json(result);
   });
 
   // UC-5: Delete announcement
   app.delete("/:id", adminOnly, async (c) => {
-    try {
-      const uow = container.createUnitOfWork();
-      await container.deleteAnnouncementUseCase.execute(c.req.param("id"), uow);
-      return c.json({ success: true });
-    } catch (error) {
-      return handleDomainError(c, error);
-    }
+    const uow = container.createUnitOfWork();
+    await container.deleteAnnouncementUseCase.execute(c.req.param("id"), uow);
+    return c.json({ success: true });
   });
 
   return app;

@@ -9,6 +9,7 @@ export enum ErrorCode {
   INVALID_CREDENTIALS = "INVALID_CREDENTIALS",
   ACCOUNT_LOCKED = "ACCOUNT_LOCKED",
   INVALID_TOKEN = "INVALID_TOKEN",
+  EXPIRED_RESET_TOKEN = "EXPIRED_RESET_TOKEN",
   INVALID_PASSWORD = "INVALID_PASSWORD",
   CANNOT_DELETE_SELF = "CANNOT_DELETE_SELF",
   INVALID_ROLE = "INVALID_ROLE",
@@ -90,6 +91,12 @@ export class AccountLockedError extends DomainError {
 export class InvalidTokenError extends DomainError {
   constructor(message: string = "無効なリフレッシュトークンです") {
     super(ErrorCode.INVALID_TOKEN, message);
+  }
+}
+
+export class ExpiredResetTokenError extends DomainError {
+  constructor(message: string = "無効または期限切れのトークンです") {
+    super(ErrorCode.EXPIRED_RESET_TOKEN, message);
   }
 }
 

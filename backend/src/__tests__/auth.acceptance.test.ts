@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { app } from "../app.js";
 import { setupTestDb, resetTestDb, seedTestAdmin } from "./test-helpers.js";
-import { getSentEmails } from "../auth-routes.js";
+import { container } from "../app.js";
+import type { InMemoryEmailService } from "../infrastructure/services/in-memory-email.service.js";
 
 function req(method: string, path: string, options: { headers?: Record<string, string>; body?: unknown } = {}) {
   const init: RequestInit = {
@@ -66,7 +67,7 @@ describe("認証機能 受け入れテスト", () => {
     expect(resetReqRes.status).toBe(200);
 
     // 2. Get reset token from sent emails
-    const emails = getSentEmails();
+    const emails = (container.emailService as InMemoryEmailService).getSentEmails();
     expect(emails.length).toBe(1);
     const resetToken = emails[0].token;
 

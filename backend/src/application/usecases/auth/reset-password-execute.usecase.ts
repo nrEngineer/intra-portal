@@ -2,7 +2,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import type { HashService } from "../../ports/services/hash.service.js";
 import {
   InvalidPasswordError,
-  InvalidTokenError,
+  ExpiredResetTokenError,
 } from "../../../domain/errors/domain-error.js";
 import { validatePassword } from "../../../domain/rules/auth.rules.js";
 
@@ -18,7 +18,7 @@ export class ResetPasswordExecuteUseCase {
     const entry = await uow.passwordResetRepo.findByToken(token);
 
     if (!entry || new Date(entry.expiresAt).getTime() < Date.now() || entry.usedAt) {
-      throw new InvalidTokenError("無効または期限切れのトークンです");
+      throw new ExpiredResetTokenError();
     }
 
     const passwordHash = await this.hashService.hash(newPassword);
