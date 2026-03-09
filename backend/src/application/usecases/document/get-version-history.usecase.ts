@@ -1,7 +1,7 @@
 import type { UnitOfWork } from "../../ports/unit-of-work.js";
 
 export class GetVersionHistoryUseCase {
-  async execute(documentId: string, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, documentId: string) {
     return uow.documentRepo.getVersions(documentId);
   }
 }

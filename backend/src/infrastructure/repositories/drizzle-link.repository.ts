@@ -1,6 +1,6 @@
 import { eq, asc } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as schema from "../../db/schema.js";
+import * as schema from "../db/schema.js";
 import type { LinkRepository } from "../../application/ports/repositories/link.repository.js";
 import type { InternalLink } from "../../domain/models/link.js";
 

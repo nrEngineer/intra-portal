@@ -5,7 +5,7 @@ import type { UpdateAnnouncementInputDTO } from "./dto.js";
 import type { AnnouncementStatus } from "../../../domain/models/announcement.js";
 
 export class UpdateAnnouncementUseCase {
-  async execute(id: string, input: UpdateAnnouncementInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, id: string, input: UpdateAnnouncementInputDTO) {
     const existing = await uow.announcementRepo.findById(id);
 
     if (!existing) {

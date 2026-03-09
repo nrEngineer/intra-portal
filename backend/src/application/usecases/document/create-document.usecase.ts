@@ -3,7 +3,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import type { CreateDocumentInputDTO } from "./dto.js";
 
 export class CreateDocumentUseCase {
-  async execute(input: CreateDocumentInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, input: CreateDocumentInputDTO) {
     const now = new Date().toISOString();
     const docId = randomUUID();
 

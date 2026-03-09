@@ -14,6 +14,7 @@ export function createAnnouncementRoutes(container: Container, authMiddleware: M
     const user = c.get("user");
     const uow = container.createUnitOfWork();
     const result = await container.listAnnouncementsUseCase.execute(
+      uow,
       {
         user,
         drafts: c.req.query("drafts"),
@@ -21,7 +22,6 @@ export function createAnnouncementRoutes(container: Container, authMiddleware: M
         search: c.req.query("search"),
         page: c.req.query("page"),
       },
-      uow,
     );
     return c.json(result);
   });
@@ -30,7 +30,7 @@ export function createAnnouncementRoutes(container: Container, authMiddleware: M
   app.get("/unread-count", async (c) => {
     const user = c.get("user");
     const uow = container.createUnitOfWork();
-    const result = await container.getUnreadCountUseCase.execute(user.id, uow);
+    const result = await container.getUnreadCountUseCase.execute(uow, user.id);
     return c.json(result);
   });
 
@@ -55,7 +55,7 @@ export function createAnnouncementRoutes(container: Container, authMiddleware: M
   app.get("/:id", async (c) => {
     const user = c.get("user");
     const uow = container.createUnitOfWork();
-    const result = await container.getAnnouncementUseCase.execute(c.req.param("id"), user, uow);
+    const result = await container.getAnnouncementUseCase.execute(uow, c.req.param("id"), user);
     return c.json(result);
   });
 
@@ -71,8 +71,8 @@ export function createAnnouncementRoutes(container: Container, authMiddleware: M
     }>();
     const uow = container.createUnitOfWork();
     const result = await container.createAnnouncementUseCase.execute(
-      { title, body, category, status, pinned, userId: user.id },
       uow,
+      { title, body, category, status, pinned, userId: user.id },
     );
     return c.json(result, 201);
   });
@@ -84,9 +84,9 @@ export function createAnnouncementRoutes(container: Container, authMiddleware: M
     >();
     const uow = container.createUnitOfWork();
     const result = await container.updateAnnouncementUseCase.execute(
+      uow,
       c.req.param("id"),
       { title, body, category, status, pinned },
-      uow,
     );
     return c.json(result);
   });
@@ -94,7 +94,7 @@ export function createAnnouncementRoutes(container: Container, authMiddleware: M
   // UC-5: Delete announcement
   app.delete("/:id", adminOnly, async (c) => {
     const uow = container.createUnitOfWork();
-    await container.deleteAnnouncementUseCase.execute(c.req.param("id"), uow);
+    await container.deleteAnnouncementUseCase.execute(uow, c.req.param("id"));
     return c.json({ success: true });
   });
 

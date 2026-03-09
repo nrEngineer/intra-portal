@@ -13,8 +13,8 @@ export function createDocumentRoutes(container: Container, authMiddleware: Middl
   app.get("/folders", async (c) => {
     const uow = container.createUnitOfWork();
     const data = await container.listFoldersUseCase.execute(
-      c.req.query("parentId") || null,
       uow,
+      c.req.query("parentId") || null,
     );
     return c.json({ data });
   });
@@ -24,8 +24,8 @@ export function createDocumentRoutes(container: Container, authMiddleware: Middl
     const { name, parentId } = await c.req.json<{ name: string; parentId?: string }>();
     const uow = container.createUnitOfWork();
     const folder = await container.createFolderUseCase.execute(
-      { name, parentId: parentId || null, userId: user.id },
       uow,
+      { name, parentId: parentId || null, userId: user.id },
     );
     return c.json(folder, 201);
   });
@@ -33,13 +33,13 @@ export function createDocumentRoutes(container: Container, authMiddleware: Middl
   app.put("/folders/:id", editorOrAdmin, async (c) => {
     const { name } = await c.req.json<{ name: string }>();
     const uow = container.createUnitOfWork();
-    const folder = await container.updateFolderUseCase.execute(c.req.param("id"), name, uow);
+    const folder = await container.updateFolderUseCase.execute(uow, c.req.param("id"), name);
     return c.json({ data: folder });
   });
 
   app.delete("/folders/:id", adminOnly, async (c) => {
     const uow = container.createUnitOfWork();
-    await container.deleteFolderUseCase.execute(c.req.param("id"), uow);
+    await container.deleteFolderUseCase.execute(uow, c.req.param("id"));
     return c.json({ success: true });
   });
 
@@ -47,16 +47,16 @@ export function createDocumentRoutes(container: Container, authMiddleware: Middl
   app.get("/", async (c) => {
     const uow = container.createUnitOfWork();
     const data = await container.listDocumentsUseCase.execute(
+      uow,
       c.req.query("folderId"),
       c.req.query("search"),
-      uow,
     );
     return c.json({ data });
   });
 
   app.get("/:id/versions", async (c) => {
     const uow = container.createUnitOfWork();
-    const data = await container.getVersionHistoryUseCase.execute(c.req.param("id"), uow);
+    const data = await container.getVersionHistoryUseCase.execute(uow, c.req.param("id"));
     return c.json({ data });
   });
 
@@ -80,8 +80,8 @@ export function createDocumentRoutes(container: Container, authMiddleware: Middl
     }>();
     const uow = container.createUnitOfWork();
     const doc = await container.createDocumentUseCase.execute(
-      { title, folderId, fileUrl, fileName, fileSize, userId: user.id },
       uow,
+      { title, folderId, fileUrl, fileName, fileSize, userId: user.id },
     );
     return c.json(doc, 201);
   });
@@ -96,16 +96,16 @@ export function createDocumentRoutes(container: Container, authMiddleware: Middl
     }>();
     const uow = container.createUnitOfWork();
     const doc = await container.updateDocumentUseCase.execute(
+      uow,
       c.req.param("id"),
       { title, fileUrl, fileName, fileSize, userId: user.id },
-      uow,
     );
     return c.json(doc);
   });
 
   app.delete("/:id", adminOnly, async (c) => {
     const uow = container.createUnitOfWork();
-    await container.deleteDocumentUseCase.execute(c.req.param("id"), uow);
+    await container.deleteDocumentUseCase.execute(uow, c.req.param("id"));
     return c.json({ success: true });
   });
 

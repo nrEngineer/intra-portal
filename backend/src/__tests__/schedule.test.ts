@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { app } from "../app.js";
 import { setupTestDb, resetTestDb, seedTestAdmin, seedTestMember } from "./test-helpers.js";
-import { getDb } from "../db/connection.js";
-import * as schema from "../db/schema.js";
+import { getDb } from "../infrastructure/db/connection.js";
+import * as schema from "../infrastructure/db/schema.js";
 
 const adminHeaders = { "x-user-id": "admin-1", "x-user-role": "admin" };
 const memberHeaders = { "x-user-id": "member-1", "x-user-role": "member" };

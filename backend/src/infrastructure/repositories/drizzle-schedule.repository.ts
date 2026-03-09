@@ -1,6 +1,6 @@
 import { eq, and, gte, lte, inArray } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as schema from "../../db/schema.js";
+import * as schema from "../db/schema.js";
 import type {
   ScheduleRepository,
   TeamRow,
@@ -35,9 +35,8 @@ export class DrizzleScheduleRepository implements ScheduleRepository {
 
     const memberMap = new Map<string, string[]>();
     for (const m of allMembers) {
-      const list = memberMap.get(m.teamId) ?? [];
-      list.push(m.userId);
-      memberMap.set(m.teamId, list);
+      const existing = memberMap.get(m.teamId);
+      memberMap.set(m.teamId, existing ? [...existing, m.userId] : [m.userId]);
     }
 
     return teamRows.map((team) => ({

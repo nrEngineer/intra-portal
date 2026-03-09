@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as schema from "../../db/schema.js";
+import * as schema from "../db/schema.js";
 import type {
   RefreshTokenRepository,
   RefreshTokenEntry,

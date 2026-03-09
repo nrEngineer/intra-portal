@@ -2,7 +2,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import { FolderNotEmptyError, ResourceNotFoundError } from "../../../domain/errors/domain-error.js";
 
 export class DeleteFolderUseCase {
-  async execute(id: string, uow: UnitOfWork): Promise<void> {
+  async execute(uow: UnitOfWork, id: string): Promise<void> {
     const hasChildren = await uow.documentRepo.hasChildren(id);
 
     if (hasChildren) {

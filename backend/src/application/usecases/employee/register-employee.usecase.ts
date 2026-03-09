@@ -3,7 +3,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import type { RegisterEmployeeInputDTO } from "./dto.js";
 
 export class RegisterEmployeeUseCase {
-  async execute(input: RegisterEmployeeInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, input: RegisterEmployeeInputDTO) {
     const now = new Date().toISOString();
 
     return uow.employeeRepo.create({

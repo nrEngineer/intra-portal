@@ -1,4 +1,5 @@
 import type { Context, ErrorHandler } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { ErrorCode, DomainError } from "../../domain/errors/domain-error.js";
 
 const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
@@ -32,7 +33,7 @@ const ERROR_STATUS_MAP: Record<ErrorCode, number> = {
 export const errorHandler: ErrorHandler = (err, c) => {
   if (err instanceof DomainError) {
     const status = ERROR_STATUS_MAP[err.errorCode] ?? 500;
-    return c.json({ error: err.message }, status as any);
+    return c.json({ error: err.message }, status as ContentfulStatusCode);
   }
   return c.json({ error: "Internal Server Error" }, 500);
 };

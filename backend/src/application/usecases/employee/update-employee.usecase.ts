@@ -3,7 +3,7 @@ import { ResourceNotFoundError } from "../../../domain/errors/domain-error.js";
 import type { UpdateEmployeeInputDTO } from "./dto.js";
 
 export class UpdateEmployeeUseCase {
-  async execute(id: string, input: UpdateEmployeeInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, id: string, input: UpdateEmployeeInputDTO) {
     const updated = await uow.employeeRepo.update(id, {
       name: input.name,
       email: input.email,

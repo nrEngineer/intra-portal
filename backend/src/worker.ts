@@ -3,10 +3,9 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { drizzle } from "drizzle-orm/d1";
-import * as schema from "./db/schema.js";
-import { setDb } from "./db/connection.js";
-import { setJwtSecret as setJwtSecretAuth } from "./auth-utils.js";
-import { setJwtSecret as setJwtSecretService } from "./infrastructure/services/jwt-token.service.js";
+import * as schema from "./infrastructure/db/schema.js";
+import { setDb } from "./infrastructure/db/connection.js";
+import { setJwtSecret } from "./infrastructure/services/jwt-token.service.js";
 import { app as nodeApp } from "./app.js";
 
 type Bindings = {
@@ -22,10 +21,8 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use("/*", async (c, next) => {
   const db = drizzle(c.env.DB, { schema });
   setDb(db as any);
-  // Set JWT secret in both modules (auth-utils = old middleware, jwt-token.service = new Clean Architecture)
   const jwtSecret = c.env.JWT_SECRET || "dev-fallback-secret";
-  setJwtSecretAuth(jwtSecret);
-  setJwtSecretService(jwtSecret);
+  setJwtSecret(jwtSecret);
   await next();
 });
 

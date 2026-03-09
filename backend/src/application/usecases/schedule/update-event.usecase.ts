@@ -4,7 +4,7 @@ import type { User } from "../../../domain/models/user.js";
 import type { UpdateEventInputDTO } from "./dto.js";
 
 export class UpdateEventUseCase {
-  async execute(eventId: string, input: UpdateEventInputDTO, user: User, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, eventId: string, input: UpdateEventInputDTO, user: User) {
     const existing = await uow.scheduleRepo.findEventById(eventId);
 
     if (!existing) {

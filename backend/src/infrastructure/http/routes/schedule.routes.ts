@@ -13,27 +13,27 @@ export function createScheduleRoutes(container: Container, authMiddleware: Middl
   app.get("/teams", async (c) => {
     const user = c.get("user");
     const uow = container.createUnitOfWork();
-    const data = await container.listTeamsUseCase.execute(user.id, uow);
+    const data = await container.listTeamsUseCase.execute(uow, user.id);
     return c.json({ data });
   });
 
   app.post("/teams", adminOnly, async (c) => {
     const { name, memberIds } = await c.req.json<{ name: string; memberIds: string[] }>();
     const uow = container.createUnitOfWork();
-    const team = await container.createTeamUseCase.execute({ name, memberIds }, uow);
+    const team = await container.createTeamUseCase.execute(uow, { name, memberIds });
     return c.json(team, 201);
   });
 
   app.put("/teams/:id", adminOnly, async (c) => {
     const { name } = await c.req.json<{ name: string }>();
     const uow = container.createUnitOfWork();
-    const team = await container.updateTeamUseCase.execute(c.req.param("id"), name, uow);
+    const team = await container.updateTeamUseCase.execute(uow, c.req.param("id"), name);
     return c.json({ data: team });
   });
 
   app.delete("/teams/:id", adminOnly, async (c) => {
     const uow = container.createUnitOfWork();
-    await container.deleteTeamUseCase.execute(c.req.param("id"), uow);
+    await container.deleteTeamUseCase.execute(uow, c.req.param("id"));
     return c.body(null, 204);
   });
 
@@ -42,11 +42,11 @@ export function createScheduleRoutes(container: Container, authMiddleware: Middl
     const user = c.get("user");
     const uow = container.createUnitOfWork();
     const result = await container.listEventsUseCase.execute(
+      uow,
       c.req.query("teamId"),
       c.req.query("start"),
       c.req.query("end"),
       user,
-      uow,
     );
     return c.json(result);
   });
@@ -63,8 +63,8 @@ export function createScheduleRoutes(container: Container, authMiddleware: Middl
     }>();
     const uow = container.createUnitOfWork();
     const event = await container.createEventUseCase.execute(
-      { title, description, startAt, endAt, teamId, allDay, userId: user.id },
       uow,
+      { title, description, startAt, endAt, teamId, allDay, userId: user.id },
     );
     return c.json(event, 201);
   });
@@ -80,10 +80,10 @@ export function createScheduleRoutes(container: Container, authMiddleware: Middl
     }>();
     const uow = container.createUnitOfWork();
     const result = await container.updateEventUseCase.execute(
+      uow,
       c.req.param("id"),
       { title, description, startAt, endAt, allDay },
       user,
-      uow,
     );
     return c.json(result);
   });
@@ -91,7 +91,7 @@ export function createScheduleRoutes(container: Container, authMiddleware: Middl
   app.delete("/events/:id", async (c) => {
     const user = c.get("user");
     const uow = container.createUnitOfWork();
-    await container.deleteEventUseCase.execute(c.req.param("id"), user, uow);
+    await container.deleteEventUseCase.execute(uow, c.req.param("id"), user);
     return c.json({ success: true });
   });
 

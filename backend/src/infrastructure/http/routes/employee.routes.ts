@@ -12,9 +12,9 @@ export function createEmployeeRoutes(container: Container, authMiddleware: Middl
   app.get("/", async (c) => {
     const uow = container.createUnitOfWork();
     const data = await container.listEmployeesUseCase.execute(
+      uow,
       c.req.query("search"),
       c.req.query("department"),
-      uow,
     );
     return c.json({ data });
   });
@@ -32,8 +32,8 @@ export function createEmployeeRoutes(container: Container, authMiddleware: Middl
     }>();
     const uow = container.createUnitOfWork();
     const emp = await container.registerEmployeeUseCase.execute(
-      { userId, name, email, department, position, photoUrl, phone, joinedAt },
       uow,
+      { userId, name, email, department, position, photoUrl, phone, joinedAt },
     );
     return c.json(emp, 201);
   });
@@ -57,9 +57,9 @@ export function createEmployeeRoutes(container: Container, authMiddleware: Middl
     }>();
     const uow = container.createUnitOfWork();
     const emp = await container.updateEmployeeUseCase.execute(
+      uow,
       c.req.param("id"),
       { name, email, department, position, phone, photoUrl, joinedAt },
-      uow,
     );
     return c.json(emp);
   });

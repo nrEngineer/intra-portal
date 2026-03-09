@@ -21,10 +21,8 @@ export function validateUpload(body: { fileCount: number; fileSizes: number[] })
   if (body.fileCount > MAX_FILES) {
     return `添付ファイルは最大${MAX_FILES}個までです`;
   }
-  for (const size of body.fileSizes) {
-    if (size > MAX_FILE_SIZE) {
-      return "ファイルサイズは10MBまでです";
-    }
+  if (body.fileSizes.some(size => size > MAX_FILE_SIZE)) {
+    return "ファイルサイズは10MBまでです";
   }
   return null;
 }

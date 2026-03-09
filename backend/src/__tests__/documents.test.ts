@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { app } from "../app.js";
 import { setupTestDb, resetTestDb, seedTestMember, seedTestEditor, seedTestAdmin } from "./test-helpers.js";
-import { getDb } from "../db/connection.js";
-import * as schema from "../db/schema.js";
+import { getDb } from "../infrastructure/db/connection.js";
+import * as schema from "../infrastructure/db/schema.js";
 import { eq } from "drizzle-orm";
 
 function req(method: string, path: string, options: { headers?: Record<string, string>; body?: unknown } = {}) {

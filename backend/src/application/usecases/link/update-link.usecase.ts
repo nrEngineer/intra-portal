@@ -3,7 +3,7 @@ import { ResourceNotFoundError } from "../../../domain/errors/domain-error.js";
 import type { UpdateLinkInputDTO } from "./dto.js";
 
 export class UpdateLinkUseCase {
-  async execute(id: string, input: UpdateLinkInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, id: string, input: UpdateLinkInputDTO) {
     const updated = await uow.linkRepo.update(id, {
       title: input.title,
       url: input.url,

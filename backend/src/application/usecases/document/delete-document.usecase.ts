@@ -2,7 +2,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import { ResourceNotFoundError } from "../../../domain/errors/domain-error.js";
 
 export class DeleteDocumentUseCase {
-  async execute(id: string, uow: UnitOfWork): Promise<void> {
+  async execute(uow: UnitOfWork, id: string): Promise<void> {
     const existing = await uow.documentRepo.findDocumentById(id);
 
     if (!existing) {

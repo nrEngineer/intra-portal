@@ -3,8 +3,8 @@ import { app } from "../app.js";
 import { setupTestDb, resetTestDb, seedTestAdmin } from "./test-helpers.js";
 import { container } from "../app.js";
 import type { InMemoryEmailService } from "../infrastructure/services/in-memory-email.service.js";
-import { getDb } from "../db/connection.js";
-import * as schema from "../db/schema.js";
+import { getDb } from "../infrastructure/db/connection.js";
+import * as schema from "../infrastructure/db/schema.js";
 import { eq } from "drizzle-orm";
 import bcryptjs from "bcryptjs";
 

@@ -1,6 +1,6 @@
 import { eq, desc, and, like, or, sql } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as schema from "../../db/schema.js";
+import * as schema from "../db/schema.js";
 import type {
   AnnouncementRepository,
   AnnouncementRow,
@@ -14,23 +14,19 @@ export class DrizzleAnnouncementRepository implements AnnouncementRepository {
 
   async findAll(query: AnnouncementListQuery): Promise<{ data: AnnouncementRow[]; total: number }> {
     const { showDrafts, category, search, page, limit } = query;
-    const conditions = [];
-
-    if (!showDrafts) {
-      conditions.push(eq(schema.announcements.status, "published"));
-    }
-    if (category) {
-      conditions.push(eq(schema.announcements.category, category));
-    }
-    if (search) {
-      const q = `%${search.toLowerCase()}%`;
-      conditions.push(
-        or(
-          like(sql`lower(${schema.announcements.title})`, q),
-          like(sql`lower(${schema.announcements.body})`, q),
-        )!,
-      );
-    }
+    const searchQ = search ? `%${search.toLowerCase()}%` : null;
+    const conditions = [
+      ...(!showDrafts ? [eq(schema.announcements.status, "published")] : []),
+      ...(category ? [eq(schema.announcements.category, category)] : []),
+      ...(searchQ
+        ? [
+            or(
+              like(sql`lower(${schema.announcements.title})`, searchQ),
+              like(sql`lower(${schema.announcements.body})`, searchQ),
+            )!,
+          ]
+        : []),
+    ];
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 

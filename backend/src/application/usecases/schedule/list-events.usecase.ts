@@ -4,11 +4,11 @@ import type { User } from "../../../domain/models/user.js";
 
 export class ListEventsUseCase {
   async execute(
+    uow: UnitOfWork,
     teamId: string | undefined,
     start: string | undefined,
     end: string | undefined,
     user: User,
-    uow: UnitOfWork,
   ) {
     if (!teamId) {
       throw new TeamIdRequiredError();

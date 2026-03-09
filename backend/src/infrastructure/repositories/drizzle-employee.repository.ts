@@ -1,6 +1,6 @@
 import { eq, like, or, sql } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as schema from "../../db/schema.js";
+import * as schema from "../db/schema.js";
 import type { EmployeeRepository } from "../../application/ports/repositories/employee.repository.js";
 import type { Employee } from "../../domain/models/employee.js";
 

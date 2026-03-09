@@ -2,9 +2,9 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { sql } from "drizzle-orm";
 import { app } from "./app.js";
-import { initDb } from "./db/connection.js";
-import { createTables } from "./db/create-tables.js";
-import { seed } from "./db/seed.js";
+import { initDb } from "./infrastructure/db/connection.js";
+import { createTables } from "./infrastructure/db/create-tables.js";
+import { seed } from "./infrastructure/db/seed.js";
 import fs from "fs";
 import path from "path";
 

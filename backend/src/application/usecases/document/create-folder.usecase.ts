@@ -3,7 +3,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import type { CreateFolderInputDTO } from "./dto.js";
 
 export class CreateFolderUseCase {
-  async execute(input: CreateFolderInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, input: CreateFolderInputDTO) {
     const now = new Date().toISOString();
 
     return uow.documentRepo.createFolder({

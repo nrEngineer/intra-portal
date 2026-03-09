@@ -3,7 +3,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import type { CreateTeamInputDTO } from "./dto.js";
 
 export class CreateTeamUseCase {
-  async execute(input: CreateTeamInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, input: CreateTeamInputDTO) {
     const now = new Date().toISOString();
     const teamId = randomUUID();
 

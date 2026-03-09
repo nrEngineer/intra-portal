@@ -3,7 +3,7 @@ import { ResourceNotFoundError, ForbiddenError } from "../../../domain/errors/do
 import type { User } from "../../../domain/models/user.js";
 
 export class DeleteEventUseCase {
-  async execute(eventId: string, user: User, uow: UnitOfWork): Promise<void> {
+  async execute(uow: UnitOfWork, eventId: string, user: User): Promise<void> {
     const existing = await uow.scheduleRepo.findEventById(eventId);
 
     if (!existing) {

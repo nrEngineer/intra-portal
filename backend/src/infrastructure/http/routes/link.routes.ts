@@ -11,7 +11,7 @@ export function createLinkRoutes(container: Container, authMiddleware: Middlewar
 
   app.get("/", async (c) => {
     const uow = container.createUnitOfWork();
-    const data = await container.listLinksUseCase.execute(c.req.query("category"), uow);
+    const data = await container.listLinksUseCase.execute(uow, c.req.query("category"));
     return c.json({ data });
   });
 
@@ -32,8 +32,8 @@ export function createLinkRoutes(container: Container, authMiddleware: Middlewar
     }>();
     const uow = container.createUnitOfWork();
     const link = await container.createLinkUseCase.execute(
-      { title, url, description, category, sortOrder, userId: user.id },
       uow,
+      { title, url, description, category, sortOrder, userId: user.id },
     );
     return c.json(link, 201);
   });
@@ -47,16 +47,16 @@ export function createLinkRoutes(container: Container, authMiddleware: Middlewar
     }>();
     const uow = container.createUnitOfWork();
     const link = await container.updateLinkUseCase.execute(
+      uow,
       c.req.param("id"),
       { title, url, description, category },
-      uow,
     );
     return c.json(link);
   });
 
   app.delete("/:id", editorOrAdmin, async (c) => {
     const uow = container.createUnitOfWork();
-    await container.deleteLinkUseCase.execute(c.req.param("id"), uow);
+    await container.deleteLinkUseCase.execute(uow, c.req.param("id"));
     return c.json({ success: true });
   });
 

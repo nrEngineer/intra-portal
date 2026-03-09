@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { app } from "../app.js";
-import { validatePassword, verifyAccessToken } from "../auth-utils.js";
+import { validatePassword } from "../domain/rules/auth.rules.js";
+import { container } from "../app.js";
 import { setupTestDb, resetTestDb, seedTestAdmin } from "./test-helpers.js";
-import { getDb } from "../db/connection.js";
-import * as schema from "../db/schema.js";
+import { getDb } from "../infrastructure/db/connection.js";
+import * as schema from "../infrastructure/db/schema.js";
 import { eq } from "drizzle-orm";
 
 function req(method: string, path: string, options: { headers?: Record<string, string>; body?: unknown } = {}) {
@@ -60,7 +61,7 @@ describe("S-2: アカウントロック", () => {
 
 describe("S-3: トークン有効期限管理", () => {
   it("期限切れアクセストークン→検証失敗", () => {
-    const result = verifyAccessToken("invalid.token.here");
+    const result = container.tokenService.verifyAccessToken("invalid.token.here");
     expect(result).toBeNull();
   });
 });

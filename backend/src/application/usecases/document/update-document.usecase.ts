@@ -4,7 +4,7 @@ import { ResourceNotFoundError } from "../../../domain/errors/domain-error.js";
 import type { UpdateDocumentInputDTO } from "./dto.js";
 
 export class UpdateDocumentUseCase {
-  async execute(id: string, input: UpdateDocumentInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, id: string, input: UpdateDocumentInputDTO) {
     const now = new Date().toISOString();
 
     const existing = await uow.documentRepo.findDocumentById(id);

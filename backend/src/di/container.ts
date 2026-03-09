@@ -64,8 +64,8 @@ import { BcryptHashService } from "../infrastructure/services/bcrypt-hash.servic
 import { JwtTokenService } from "../infrastructure/services/jwt-token.service.js";
 import { InMemoryEmailService } from "../infrastructure/services/in-memory-email.service.js";
 import { DrizzleUnitOfWork } from "../infrastructure/drizzle-unit-of-work.js";
-import { getDb } from "../db/connection.js";
-import { storage } from "../lib/storage.js";
+import { getDb } from "../infrastructure/db/connection.js";
+import { storage } from "../infrastructure/services/storage.js";
 
 export interface Container {
   // Services

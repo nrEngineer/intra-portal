@@ -3,7 +3,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import type { CreateLinkInputDTO } from "./dto.js";
 
 export class CreateLinkUseCase {
-  async execute(input: CreateLinkInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, input: CreateLinkInputDTO) {
     const now = new Date().toISOString();
 
     return uow.linkRepo.create({

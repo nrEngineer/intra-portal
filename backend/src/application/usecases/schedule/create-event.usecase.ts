@@ -3,7 +3,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import type { CreateEventInputDTO } from "./dto.js";
 
 export class CreateEventUseCase {
-  async execute(input: CreateEventInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, input: CreateEventInputDTO) {
     const now = new Date().toISOString();
 
     return uow.scheduleRepo.createEvent({

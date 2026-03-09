@@ -4,7 +4,7 @@ import { ResourceNotFoundError } from "../../../domain/errors/domain-error.js";
 import type { User } from "../../../domain/models/user.js";
 
 export class GetAnnouncementUseCase {
-  async execute(id: string, user: User, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, id: string, user: User) {
     const announcement = await uow.announcementRepo.findById(id);
 
     if (!announcement) {

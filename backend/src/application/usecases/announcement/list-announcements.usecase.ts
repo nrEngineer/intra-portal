@@ -2,7 +2,7 @@ import type { UnitOfWork } from "../../ports/unit-of-work.js";
 import type { ListAnnouncementsInputDTO } from "./dto.js";
 
 export class ListAnnouncementsUseCase {
-  async execute(input: ListAnnouncementsInputDTO, uow: UnitOfWork) {
+  async execute(uow: UnitOfWork, input: ListAnnouncementsInputDTO) {
     const page = parseInt(input.page || "1", 10);
     const limit = 10;
     const showDrafts = input.user.role === "admin" && input.drafts === "true";

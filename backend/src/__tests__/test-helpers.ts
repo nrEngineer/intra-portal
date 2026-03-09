@@ -1,8 +1,8 @@
-import { initDb, getDb } from "../db/connection.js";
-import { createTables, clearAllTables } from "../db/create-tables.js";
-import * as schema from "../db/schema.js";
+import { initDb, getDb } from "../infrastructure/db/connection.js";
+import { createTables, clearAllTables } from "../infrastructure/db/create-tables.js";
+import * as schema from "../infrastructure/db/schema.js";
 import bcryptjs from "bcryptjs";
-import type { AppDatabase } from "../db/connection.js";
+import type { AppDatabase } from "../infrastructure/db/connection.js";
 import { container } from "../app.js";
 import type { InMemoryEmailService } from "../infrastructure/services/in-memory-email.service.js";
 
